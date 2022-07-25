@@ -15,7 +15,7 @@ const Home: NextPage = () => {
                 <link rel="icon" href="/favicon.ico" />
             </Head>
 
-            <Game width={800} height={600} gridSize={20} />
+            <Game size={800} cells={25} />
         </div>
     )
 }
