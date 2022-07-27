@@ -1,4 +1,4 @@
-import React, { ReactElement, useState, useEffect, useRef } from 'react';
+import { ReactElement, useState, useEffect, useRef } from 'react';
 import { Stage, Layer, Rect, Image, Line, Text } from 'react-konva';
 import useImage from 'use-image';
 
@@ -31,7 +31,10 @@ type Coord = {
 type GameProps = {
     size: number;
     cells: number;
+    onScoreChange: (score: number) => void;
 };
+
+type Food = [Coord, string, Controller];
 
 
 // Well we should probably use proper numbers, but for now we lerp on hex strings...
@@ -49,39 +52,57 @@ const lerpColor = (a: string, b: string, amount: number) => {
 
 const Game = ({
     size,
-    cells
+    cells,
+    onScoreChange,
 }: GameProps) => {
     const gridColor0 = "#eeeeee";
     const gridColor1 = "#dddddd";
-    const dogColor = "#9f6d20";
-    const catColor0 = "#7fb0e3";
+    const dogColor = "#db996e";
+    const catColor0 = "#8a90a0";
     const height = size, width = size;   // Only a square as level supported,
     const rows = cells, columns = cells; // so w == h and c == r!
     const gridSize = size / cells;
-    const headExtraSize = gridSize / 1.8;
+    const headExtraSize = gridSize / 1.2;
     const headExtraSizeHalf = headExtraSize / 2;
+    const foodExtraSize = gridSize / 2.2;
+    const foodExtraSizeHalf = foodExtraSize / 2;
 
 
     // Our game state
     const [status, setStatus] = useState(Status.NewGame);
     const [dogCat, setDogCat] = useState<Coord[]>([]);
+    const [foods, setFoods] = useState<Food[]>([]);
+    const [score, setScore] = useState(0);
     const [updateCount, setUpdateCount] = useState(0);
     const tickRate = useRef(0);
     const control = useRef(Controller.Dog);
     const direction = useRef(Direction.Right);
     const digesting = useRef(0);
 
+    // Setup callbacks
+    useEffect(() => { onScoreChange(score) }, [score])
+
     // Our assets
-    const [dog] = useImage("/dog.png", 'anonymous');
-    const [cat] = useImage("/cat.png", 'anonymous');
+    const images = {
+        "dog": useImage("/dog.png", 'anonymous')[0],
+        "cat": useImage("/cat.png", 'anonymous')[0],
+        "sausage": useImage("/sausage.png", 'anonymous')[0],
+        "fish": useImage("/fish.png", 'anonymous')[0],
+    }
 
     const resetGame = () => {
         setDogCat([{ x: 5, y: 5 }, { x: 6, y: 5 }, { x: 7, y: 5 }]);
+        setFoods([[{ x: 2, y: 2 }, "sausage", Controller.Dog], [{ x: 10, y: 10 }, "fish", Controller.Cat]]); // tmp
+        setScore(0);
         setUpdateCount(0);
         tickRate.current = 200;
         control.current = Controller.Dog;
         direction.current = Direction.Right;
         digesting.current = 10;
+    };
+
+    const stopGame = () => {
+        setStatus(Status.Lost);
     };
 
     const updateDogCat = () => {
@@ -98,19 +119,49 @@ const Game = ({
         // we are facing.
         // We only remove the element at the back if we are not digesting food.
         // If we are digesting, we are "growing".
+        // If it is below 0 we ate something wrong, so let's "shrink".
         if (control.current === Controller.Dog) {
             dogCat.push(next);
-            if (digesting.current === 0) dogCat.shift();
+            if (digesting.current <= 0) dogCat.shift();
         } else {
             dogCat.unshift(next);
-            if (digesting.current === 0) dogCat.pop();
+            if (digesting.current <= 0) dogCat.pop();
         }
         // We just digested an element by not removing the back element, so let's
         // substract one.
         if (digesting.current > 0) {
             digesting.current = digesting.current - 1;
+        } else if (digesting.current < 0) { // If we ate something wrong, we shrank, so let's add one
+            digesting.current = digesting.current + 1;
         }
-        setDogCat(dogCat)
+        setDogCat(dogCat);
+
+        // Let's see if we can eat something:
+        var i = foods.length
+        const first = dogCat[0], last = dogCat[dogCat.length - 1];
+        while (i--) {
+            const c = foods[i][0];
+            if ((c.x === first.x && c.y === first.y) || (c.x === last.x && c.y === last.y)) {
+                // We are eating: update digesting, set score and remove food
+                digesting.current = digesting.current + (foods[i][2] === control.current ? 2 : -2);
+                setScore(score + (foods[i][2] === control.current ? 100 : -100));
+                foods.splice(i, 1);
+            }
+        }
+        setFoods(foods);
+
+
+        // Now let's do the collision checks:
+        for (var coord of dogCat) { // If any element outside of bounds, we stop
+            if (coord.x < 0 || coord.x >= columns || coord.y < 0 || coord.y >= rows) {
+                stopGame();
+            }
+        }
+        // If dogcat collides with itself, we stop
+        const withoutDuplicates = new Set(dogCat.map(v => v.x + "-" + v.y))
+        if (withoutDuplicates.size !== dogCat.length) {
+            stopGame();
+        }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -194,12 +245,13 @@ const Game = ({
             // At the beginning and end we draw the heads
             dogCatElements.push(<Image
                 key={"dogcat-" + length}
-                image={(length === 0) ? cat : dog}
+                image={(length === 0) ? images["cat"] : images["dog"]}
                 x={coord.x * gridSize - headExtraSizeHalf} y={coord.y * gridSize - headExtraSizeHalf}
                 width={gridSize + headExtraSize} height={gridSize + headExtraSize}
             />);
         } else { // Inbetween we draw the elemnts and lerp between the colors
-            const fill = lerpColor(catColor0, dogColor, length / (dogCat.length - 1));
+            const amount = Math.min(Math.max((length + (control.current === Controller.Dog ? 4 : -4)) / (dogCat.length - 1), 0.0), 1.0);
+            const fill = lerpColor(catColor0, dogColor, amount);
             const elementSize = gridSize - 2;
             dogCatElements.push(<Line
                 key={coord.x + "-" + coord.y + "-" + length}
@@ -214,6 +266,17 @@ const Game = ({
     const catElement = dogCatElements[0];
     dogCatElements.splice(0, 1);
     dogCatElements.push(catElement);
+
+    // Now we draw all the food
+    let foodElements: ReactElement[] = [];
+    for (var food of foods) {
+        foodElements.push(<Image
+            key={"food-" + food[0].x + "-" + food[0].y}
+            image={images[food[1]]}
+            x={food[0].x * gridSize - foodExtraSizeHalf} y={food[0].y * gridSize - foodExtraSizeHalf}
+            width={gridSize + foodExtraSize} height={gridSize + foodExtraSize}
+        />);
+    }
 
     // Finally let's draw the UI components
     let uiElements: ReactElement[] = [];
@@ -272,6 +335,9 @@ const Game = ({
             </Layer>
             <Layer>
                 {dogCatElements}
+            </Layer>
+            <Layer>
+                {foodElements}
             </Layer>
             <Layer>
                 {uiElements}
