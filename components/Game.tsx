@@ -31,7 +31,8 @@ type Coord = {
 type GameProps = {
     size: number;
     cells: number;
-    onScoreChange: (score: number) => void;
+    onScoreChange: (score: number) => {};
+    onStop: () => {};
 };
 
 type Food = [Coord, string, Controller];
@@ -323,6 +324,22 @@ const Game = ({
         />);
         uiElements.push(<Text
             key="newgametext" text="Start Game" onMouseDown={startGame}
+            fontSize={fontSize} fill="#fff"
+            x={width / 2 - uiSizeHalf + fontSize * 2.5} y={height / 2 - fontSize / 2}
+        />);
+    } else if (status === Status.Lost) {
+        const startGame = () => {
+            resetGame();
+            setStatus(Status.Running);
+        };
+        uiElements.push(<Rect
+            key="newgamerect" onMouseDown={startGame}
+            x={width / 2 - uiSizeHalf} y={height / 2 - uiSizeHalf}
+            width={uiSize} height={uiSize}
+            fill="red" stroke="black" opacity={0.9}
+        />);
+        uiElements.push(<Text
+            key="newgametext" text="Try Again" onMouseDown={startGame}
             fontSize={fontSize} fill="#fff"
             x={width / 2 - uiSizeHalf + fontSize * 2.5} y={height / 2 - fontSize / 2}
         />);
