@@ -75,6 +75,15 @@ const GameContainer = ({ children }: PropsWithChildren<GameContainerProps>) => {
                 </div>
                 <div className="border-solid border-8 border-black rounded-lg">
                     {children}
+                    // <div className="absolute inset-0 flex justify-center items-center z-10">
+                    //     <p className="text-2xl font-bold">This should be on top of the map</p>
+                    // </div>
+                </div>
+                <div className="m-auto">
+                    <span className="font-sans">
+                        ☛ Use the <b>arrow-keys</b> to <b>change the direction</b>. <br />
+                        ☛ With <b>space</b> control can be changes between <b>dog or cat</b>.
+                    </span>
                 </div>
             </div>
         </div>
