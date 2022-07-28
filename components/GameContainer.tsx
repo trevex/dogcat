@@ -44,29 +44,31 @@ const GameContainer = ({ children }: PropsWithChildren<GameContainerProps>) => {
                         <Image alt="Cat 3" src={cat3} width={64} height={64} />
                         <Image alt="Cat 4" src={cat4} width={64} height={64} />
                     </div>
-                    <div className="m-auto transform transition duration-200 hover:sepia">
-                        {status === Status.NewGame ? (
-                            <a onClick={startGame}>
-                                <Image alt="Play" src={play} width={100} height={100} />
-                            </a>
-                        ) : status === Status.Running ? (
-                            <a onClick={pauseGame}>
-                                <Image alt="Pause" src={pause} width={100} height={100} />
-                            </a>
-                        ) : status === Status.Paused ? (
-                            <a onClick={resumeGame}>
-                                <Image alt="Play" src={play} width={100} height={100} />
-                            </a>
-                        ) : status === Status.Lost ? (
-                            <a onClick={startGame}>
-                                <Image alt="Play" src={restart} width={100} height={100} />
-                            </a>
-                        ) : (
-                            <a onClick={startGame}>
-                                <Image alt="Play" src={play} width={100} height={100} />
-                            </a>
-                        )}
-                        <p className="font-sans text-2xl text-center">Score: {score}</p>
+                    <div className="m-auto">
+                        <div className="transform transition duration-200 hover:sepia">
+                            {status === Status.NewGame ? (
+                                <a onClick={startGame}>
+                                    <Image alt="Play" src={play} width={100} height={100} />
+                                </a>
+                            ) : status === Status.Running ? (
+                                <a onClick={pauseGame}>
+                                    <Image alt="Pause" src={pause} width={100} height={100} />
+                                </a>
+                            ) : status === Status.Paused ? (
+                                <a onClick={resumeGame}>
+                                    <Image alt="Play" src={play} width={100} height={100} />
+                                </a>
+                            ) : status === Status.Lost ? (
+                                <a onClick={startGame}>
+                                    <Image alt="Play" src={restart} width={100} height={100} />
+                                </a>
+                            ) : (
+                                <a onClick={startGame}>
+                                    <Image alt="Play" src={play} width={100} height={100} />
+                                </a>
+                            )}
+                        </div>
+                        <p className={`font-sans text-2xl text-center ${status === Status.Lost ? "text-red-600 font-bold" : ""}`}>Score: {score}</p>
                     </div>
                     <div className="grid grid-flow-col auto-cols-max content-end">
                         <Image alt="Dog 1" src={dog1} width={64} height={64} />

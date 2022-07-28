@@ -123,13 +123,14 @@ export const GameProvider = ({ rows, columns, children }: PropsWithChildren<Game
                 for (var coord of dogCat) { // If it accidentally collides with player, we remove it
                     if (coord.x === newFoods[j][0].x && coord.y === newFoods[j][0].y) {
                         newFoods.splice(j, 1);
-                        break;
+                        break; // TODO: collision self!
                     }
                 }
             }
             setFoods(newFoods);
         }
     }, [data, foods]);
+
 
     const updateDogCat = () => {
         // Let's use the direction and current front element facing towards
@@ -223,6 +224,7 @@ export const GameProvider = ({ rows, columns, children }: PropsWithChildren<Game
         }
     };
 
+    // If the game is running, listen to key events
     useEffect(() => {
         if (status === Status.Running) {
             window.addEventListener("keydown", handleKeyDown);
