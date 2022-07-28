@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import { PropsWithChildren } from 'react';
+
 import { Status, useGameContext } from "./GameProvider";
+import GameScoreboard from './GameScoreboard';
 
 import cat1 from '../public/cat-body-01.png'
 import cat2 from '../public/cat-body-02.png'
@@ -73,11 +75,9 @@ const GameContainer = ({ children }: PropsWithChildren<GameContainerProps>) => {
                         <Image alt="Dog 4" src={dog4} width={64} height={64} />
                     </div>
                 </div>
-                <div className="border-solid border-8 border-black rounded-lg">
+                <div className="border-solid border-8 border-black rounded-lg relative">
                     {children}
-                    // <div className="absolute inset-0 flex justify-center items-center z-10">
-                    //     <p className="text-2xl font-bold">This should be on top of the map</p>
-                    // </div>
+                    {status === Status.NewGame || status === Status.Lost ? <GameScoreboard /> : null}
                 </div>
                 <div className="m-auto">
                     <span className="font-sans">
