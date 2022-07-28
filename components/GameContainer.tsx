@@ -1,6 +1,6 @@
 import Image from 'next/image';
-import { PropsWithChildren, useState } from 'react';
-import { useGameContext } from "./GameProvider";
+import { PropsWithChildren } from 'react';
+import { Status, useGameContext } from "./GameProvider";
 
 import cat1 from '../public/cat-body-01.png'
 import cat2 from '../public/cat-body-02.png'
@@ -11,18 +11,30 @@ import dog2 from '../public/dog-body-02.png'
 import dog3 from '../public/dog-body-03.png'
 import dog4 from '../public/dog-body-04.png'
 import play from '../public/play.png'
+import pause from '../public/pause.png'
+import restart from '../public/restart.png'
+import dogcat from '../public/dogcat.png'
 
 type GameContainerProps = {
 };
 
 const GameContainer = ({ children }: PropsWithChildren<GameContainerProps>) => {
     const {
-        score
+        score,
+        status,
+        startGame,
+        pauseGame,
+        resumeGame,
     } = useGameContext();
 
     return (
         <div className="flex flex-col items-center h-screen bg-stone-200">
             <div className="grid grid-flow-row auto-rows-max">
+                <div className="flex justify-center">
+                    <div>
+                        <Image alt="Logo" src={dogcat} width={405} height={90} />
+                    </div>
+                </div>
                 <div className="flex content-between">
                     <div className="grid grid-flow-col auto-cols-max content-end">
                         <Image alt="Cat 1" src={cat1} width={64} height={64} />
@@ -30,8 +42,28 @@ const GameContainer = ({ children }: PropsWithChildren<GameContainerProps>) => {
                         <Image alt="Cat 3" src={cat3} width={64} height={64} />
                         <Image alt="Cat 4" src={cat4} width={64} height={64} />
                     </div>
-                    <div className="m-auto">
-                        <Image alt="Play" src={play} width={100} height={100} />
+                    <div className="m-auto transform transition duration-200 hover:sepia">
+                        {status === Status.NewGame ? (
+                            <a onClick={startGame}>
+                                <Image alt="Play" src={play} width={100} height={100} />
+                            </a>
+                        ) : status === Status.Running ? (
+                            <a onClick={pauseGame}>
+                                <Image alt="Pause" src={pause} width={100} height={100} />
+                            </a>
+                        ) : status === Status.Paused ? (
+                            <a onClick={resumeGame}>
+                                <Image alt="Play" src={play} width={100} height={100} />
+                            </a>
+                        ) : status === Status.Lost ? (
+                            <a onClick={startGame}>
+                                <Image alt="Play" src={restart} width={100} height={100} />
+                            </a>
+                        ) : (
+                            <a onClick={startGame}>
+                                <Image alt="Play" src={play} width={100} height={100} />
+                            </a>
+                        )}
                         <p className="font-sans text-2xl text-center">Score: {score}</p>
                     </div>
                     <div className="grid grid-flow-col auto-cols-max content-end">

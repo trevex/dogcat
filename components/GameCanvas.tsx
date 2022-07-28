@@ -1,7 +1,8 @@
 import { ReactElement } from 'react';
-import { Stage, Layer, Rect, Image, Line, Text } from 'react-konva';
+import { Stage, Layer, Rect, Image, Line } from 'react-konva';
 import useImage from 'use-image';
-import { Status, Controller, useGameContext } from "./GameProvider";
+
+import { Controller, useGameContext } from "./GameProvider";
 
 
 
@@ -29,14 +30,10 @@ const GameCanvas = ({
     width,
 }: GameCanvasProps) => {
     const {
-        status, setStatus,
-        dogCat, setDogCat,
-        foods, setFoods,
-        score, setScore,
+        dogCat,
+        foods,
         control,
-        direction,
         rows, columns,
-        resetGame
     } = useGameContext();
     const gridColor0 = "#eeeeee";
     const gridColor1 = "#dddddd";
@@ -56,9 +53,6 @@ const GameCanvas = ({
         "fish": useImage("/fish.png", 'anonymous')[0],
     }
 
-    const stopGame = () => {
-        setStatus(Status.Lost);
-    };
 
     // Let's draw our background chessboard grid
     let gridElements: ReactElement[] = [];
@@ -120,72 +114,6 @@ const GameCanvas = ({
         />);
     }
 
-    // Finally let's draw the UI components
-    let uiElements: ReactElement[] = [];
-    const fontSize = gridSize;
-    const uiSize = gridSize * 10;
-    const uiSizeHalf = uiSize / 2;
-    if (status === Status.Paused) {
-        const resume = () => {
-            setStatus(Status.Running);
-        };
-        uiElements.push(<Rect
-            key="pauserect" onMouseDown={resume}
-            x={width / 2 - uiSizeHalf} y={height / 2 - uiSizeHalf}
-            width={uiSize} height={uiSize}
-            fill="orange" stroke="black" opacity={0.9}
-        />);
-        uiElements.push(<Text
-            key="pausetext" text="Resume" onMouseDown={resume}
-            fontSize={fontSize} fill="#fff"
-            x={width / 2 - uiSizeHalf + fontSize * 3} y={height / 2 - fontSize / 2}
-        />);
-    } else if (status === Status.Loading) {
-        uiElements.push(<Rect
-            key="loadrect"
-            x={width / 2 - uiSizeHalf} y={height / 2 - uiSizeHalf}
-            width={uiSize} height={uiSize}
-            fill="yellow" stroke="black" opacity={0.9}
-        />);
-        uiElements.push(<Text
-            key="loadtext" text="Loading..."
-            fontSize={fontSize} fill="#fff"
-            x={width / 2 - uiSizeHalf} y={height / 2 - fontSize / 2}
-        />);
-    } else if (status === Status.NewGame) {
-        const startGame = () => {
-            resetGame();
-            setStatus(Status.Running);
-        };
-        uiElements.push(<Rect
-            key="newgamerect" onMouseDown={startGame}
-            x={width / 2 - uiSizeHalf} y={height / 2 - uiSizeHalf}
-            width={uiSize} height={uiSize}
-            fill="green" stroke="black" opacity={0.9}
-        />);
-        uiElements.push(<Text
-            key="newgametext" text="Start Game" onMouseDown={startGame}
-            fontSize={fontSize} fill="#fff"
-            x={width / 2 - uiSizeHalf + fontSize * 2.5} y={height / 2 - fontSize / 2}
-        />);
-    } else if (status === Status.Lost) {
-        const startGame = () => {
-            resetGame();
-            setStatus(Status.Running);
-        };
-        uiElements.push(<Rect
-            key="newgamerect" onMouseDown={startGame}
-            x={width / 2 - uiSizeHalf} y={height / 2 - uiSizeHalf}
-            width={uiSize} height={uiSize}
-            fill="red" stroke="black" opacity={0.9}
-        />);
-        uiElements.push(<Text
-            key="newgametext" text="Try Again" onMouseDown={startGame}
-            fontSize={fontSize} fill="#fff"
-            x={width / 2 - uiSizeHalf + fontSize * 2.5} y={height / 2 - fontSize / 2}
-        />);
-    }
-
     return (
         <Stage width={width} height={height}>
             <Layer>
@@ -196,9 +124,6 @@ const GameCanvas = ({
             </Layer>
             <Layer>
                 {foodElements}
-            </Layer>
-            <Layer>
-                {uiElements}
             </Layer>
         </Stage>
     );

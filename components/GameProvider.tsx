@@ -31,14 +31,18 @@ export type Food = [Coord, string, Controller];
 // Ok, to control the game through the UI, we separate out the "game-state"
 // into a react context
 type GameContextType = {
-    status: Status; setStatus: (value: Status) => void;
-    dogCat: Coord[]; setDogCat: (value: Coord[]) => void;
-    foods: Food[]; setFoods: (value: Food[]) => void;
-    score: number; setScore: (value: number) => void;
+    status: Status;
+    dogCat: Coord[];
+    foods: Food[];
+    score: number;
     control: MutableRefObject<Controller>;
     direction: MutableRefObject<Direction>;
     rows: number; columns: number;
     resetGame: () => void;
+    startGame: () => void;
+    resumeGame: () => void;
+    pauseGame: () => void;
+    stopGame: () => void;
 };
 
 const GameContext = createContext<GameContextType | null>(null);
@@ -63,11 +67,6 @@ export const GameProvider = ({ rows, columns, children }: PropsWithChildren<Game
     const direction = useRef(Direction.Right);
     const digesting = useRef(0);
 
-    //     const prevStatusRef = useRef<Status>();
-    //     useEffect(() => {
-    //         console.log(status, prevStatusRef.current);
-    //         prevStatusRef.current = status;
-    //     }, [status]);
 
     const resetGame = () => {
         setDogCat([{ x: 5, y: 5 }, { x: 6, y: 5 }, { x: 7, y: 5 }]);
@@ -83,6 +82,20 @@ export const GameProvider = ({ rows, columns, children }: PropsWithChildren<Game
     const stopGame = () => {
         setStatus(Status.Lost);
     };
+
+    const resumeGame = () => {
+        setStatus(Status.Running);
+    };
+
+    const startGame = () => {
+        resetGame();
+        setStatus(Status.Running);
+    };
+
+    const pauseGame = () => {
+        setStatus(Status.Paused);
+    };
+
 
     const updateDogCat = () => {
         // Let's use the direction and current front element facing towards
@@ -146,7 +159,7 @@ export const GameProvider = ({ rows, columns, children }: PropsWithChildren<Game
     const handleKeyDown = (event: KeyboardEvent) => {
         event.preventDefault()
         if (event.code === "KeyP") {
-            setStatus(Status.Paused);
+            pauseGame();
         }
         // Changing control requires us to also figure out which direction to move back in
         if (event.code === "Space") {
@@ -196,5 +209,6 @@ export const GameProvider = ({ rows, columns, children }: PropsWithChildren<Game
         return () => { };
     }, [status, updateCount]);
 
-    return <GameContext.Provider value={{ status, setStatus, dogCat, setDogCat, foods, setFoods, score, setScore, control, direction, rows, columns, resetGame }}>{children}</GameContext.Provider>;
+
+    return <GameContext.Provider value={{ status, dogCat, foods, score, control, direction, rows, columns, resetGame, startGame, stopGame, pauseGame, resumeGame }}>{children}</GameContext.Provider>;
 };
