@@ -116,14 +116,27 @@ export const GameProvider = ({ rows, columns, children }: PropsWithChildren<Game
             }
             tickRate.current = data.tickRate;
             let newFoods = data.foods as Food[];
+            let takenCoords: Coord[] = [];
             var j = newFoods.length;
             while (j--) {
+                // Create random position
                 newFoods[j][0].x = Math.floor(Math.random() * columns);
                 newFoods[j][0].y = Math.floor(Math.random() * rows);
-                for (var coord of dogCat) { // If it accidentally collides with player, we remove it
+                // If already taken, remove food
+                const first = takenCoords.find((coord) => {
+                    return (coord.x === newFoods[j][0].x && coord.y === newFoods[j][0].y)
+                });
+                if (first === undefined) {
+                    takenCoords.push(newFoods[j][0]);
+                } else {
+                    newFoods.splice(j, 1);
+                    continue
+                }
+                // If it accidentally collides with player, we remove it
+                for (var coord of dogCat) {
                     if (coord.x === newFoods[j][0].x && coord.y === newFoods[j][0].y) {
                         newFoods.splice(j, 1);
-                        break; // TODO: collision self!
+                        break;
                     }
                 }
             }
