@@ -1,4 +1,5 @@
 import { PropsWithChildren, useState, useEffect, useRef, createContext, useContext, MutableRefObject } from 'react';
+import useSWR from 'swr';
 
 export enum Direction {
     Up = 1,
@@ -27,6 +28,15 @@ export type Coord = {
 
 export type Food = [Coord, string, Controller];
 
+const foodFetcher = (length: number, updateCount: number) =>
+    fetch('/api/foods', {
+        method: 'POST',
+        cache: 'no-cache',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ length, updateCount })
+    }).then((res) => res.json());
 
 // Ok, to control the game through the UI, we separate out the "game-state"
 // into a react context
@@ -97,6 +107,30 @@ export const GameProvider = ({ rows, columns, children }: PropsWithChildren<Game
     };
 
 
+    // Fetch food, when food was eaten
+    const { data } = useSWR(foods.length === 0 ? [dogCat.length, updateCount] : null, foodFetcher)
+    useEffect(() => {
+        if (foods.length === 0 && data !== undefined) {
+            if (data.message !== undefined) {
+                return;
+            }
+            tickRate.current = data.tickRate;
+            let newFoods = data.foods as Food[];
+            var j = newFoods.length;
+            while (j--) {
+                newFoods[j][0].x = Math.floor(Math.random() * columns);
+                newFoods[j][0].y = Math.floor(Math.random() * rows);
+                for (var coord of dogCat) { // If it accidentally collides with player, we remove it
+                    if (coord.x === newFoods[j][0].x && coord.y === newFoods[j][0].y) {
+                        newFoods.splice(j, 1);
+                        break;
+                    }
+                }
+            }
+            setFoods(newFoods);
+        }
+    }, [data, foods]);
+
     const updateDogCat = () => {
         // Let's use the direction and current front element facing towards
         // our next movement to compute the next element.
@@ -129,18 +163,21 @@ export const GameProvider = ({ rows, columns, children }: PropsWithChildren<Game
         setDogCat(dogCat);
 
         // Let's see if we can eat something:
-        var i = foods.length
+        let leftovers = [...foods];
+        var i = leftovers.length
         const first = dogCat[0], last = dogCat[dogCat.length - 1];
         while (i--) {
-            const c = foods[i][0];
+            const c = leftovers[i][0];
             if ((c.x === first.x && c.y === first.y) || (c.x === last.x && c.y === last.y)) {
                 // We are eating: update digesting, set score and remove food
-                digesting.current = digesting.current + (foods[i][2] === control.current ? 2 : -2);
-                setScore(score + (foods[i][2] === control.current ? 100 : -100));
-                foods.splice(i, 1);
+                digesting.current = digesting.current + (leftovers[i][2] === control.current ? 2 : -2);
+                setScore(score + (leftovers[i][2] === control.current ? 100 : -100));
+                leftovers.splice(i, 1);
             }
         }
-        setFoods(foods);
+        if (leftovers.length !== foods.length) { // We only update foods, when required
+            setFoods(leftovers);
+        }
 
 
         // Now let's do the collision checks:

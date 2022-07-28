@@ -46,7 +46,7 @@ const GameCanvas = ({
     const foodExtraSizeHalf = foodExtraSize / 2;
 
     // Our assets
-    const images = {
+    const images: { [name: string]: HTMLImageElement | undefined } = {
         "dog": useImage("/dog.png", 'anonymous')[0],
         "cat": useImage("/cat.png", 'anonymous')[0],
         "sausage": useImage("/sausage.png", 'anonymous')[0],
