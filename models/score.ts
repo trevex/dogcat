@@ -1,12 +1,12 @@
-import db from "./db";
-import { DataTypes } from 'sequelize';
+import { Table, Column, Model, DataType } from 'sequelize-typescript'
 
-const Score = db.define('Score', {
-    username: DataTypes.STRING,
-    datetime: DataTypes.DATE,
-    value: DataTypes.NUMBER,
-});
+@Table
+class Score extends Model {
+    @Column({ type: DataType.STRING })
+    username!: string
 
-await Score.sync();
+    @Column({ type: DataType.INTEGER })
+    score!: number
+}
 
 export default Score;
