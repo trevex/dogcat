@@ -79,7 +79,7 @@ const GameContainer = ({ children }: PropsWithChildren<GameContainerProps>) => {
                 </div>
                 <div className="border-solid border-8 border-black rounded-lg relative">
                     {children}
-                    {status === Status.NewGame || status === Status.Lost ? <GameScoreboard /> : null}
+                    {status === Status.NewGame || status === Status.Lost ? <GameScoreboard score={status === Status.Lost ? score : undefined} /> : null}
                 </div>
                 <div className="m-auto">
                     <span className="font-sans">
