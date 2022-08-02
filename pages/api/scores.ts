@@ -12,12 +12,12 @@ export default async function handler(
 ) {
     let recentScore: Score | undefined;
     if (req.method === 'POST') { // If method was POST, we also add a new score!
-        const username = "foobar"; // TODO: get from IAP header
         const {
             score,
+            username
         } = req.body;
-        if (typeof score !== "number") {
-            res.status(400).send({ message: 'Required argument not provided!' });
+        if (typeof score !== "number" || typeof username !== "string") {
+            res.status(400).send({ message: 'Required arguments not provided!' });
             return;
         }
         Date.now()

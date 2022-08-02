@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, ChangeEvent } from 'react';
 
 import { Status, useGameContext } from "./GameProvider";
 import GameScoreboard from './GameScoreboard';
@@ -24,10 +24,15 @@ const GameContainer = ({ children }: PropsWithChildren<GameContainerProps>) => {
     const {
         score,
         status,
+        playerName,
         startGame,
         pauseGame,
         resumeGame,
     } = useGameContext();
+
+    const handleInputPlayerName = (event: ChangeEvent<HTMLInputElement>) => {
+        playerName.current = event.target.value;
+    }
 
     return (
         <div className="flex flex-col items-center h-screen bg-stone-200">
@@ -36,6 +41,9 @@ const GameContainer = ({ children }: PropsWithChildren<GameContainerProps>) => {
                     <div>
                         <Image alt="Logo" src={dogcat} width={405} height={90} />
                     </div>
+                </div>
+                <div className="flex justify-center">
+                    <input className="w-96 p-3 text-sm border-red-200 rounded-lg" placeholder="Type in your player name" type="text" onChange={handleInputPlayerName} />
                 </div>
                 <div className="flex content-between">
                     <div className="grid grid-flow-col auto-cols-max content-end -mb-2">

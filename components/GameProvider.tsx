@@ -47,6 +47,7 @@ type GameContextType = {
     score: number;
     control: MutableRefObject<Controller>;
     direction: MutableRefObject<Direction>;
+    playerName: MutableRefObject<string>;
     rows: number; columns: number;
     resetGame: () => void;
     startGame: () => void;
@@ -76,6 +77,7 @@ export const GameProvider = ({ rows, columns, children }: PropsWithChildren<Game
     const control = useRef(Controller.Dog);
     const direction = useRef(Direction.Right);
     const digesting = useRef(0);
+    const playerName = useRef("anonymous");
 
 
     const resetGame = () => {
@@ -262,5 +264,5 @@ export const GameProvider = ({ rows, columns, children }: PropsWithChildren<Game
     }, [status, updateCount]);
 
 
-    return <GameContext.Provider value={{ status, dogCat, foods, score, control, direction, rows, columns, resetGame, startGame, stopGame, pauseGame, resumeGame }}>{children}</GameContext.Provider>;
+    return <GameContext.Provider value={{ status, dogCat, foods, score, control, direction, rows, columns, resetGame, startGame, stopGame, pauseGame, resumeGame, playerName }}>{children}</GameContext.Provider>;
 };

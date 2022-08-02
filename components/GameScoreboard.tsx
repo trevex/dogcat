@@ -1,14 +1,14 @@
 import useSWR from 'swr';
-import { ReactElement } from 'react';
+import { useGameContext } from "./GameProvider";
 
-const scoreFetcher = (score?: number) =>
+const scoreFetcher = (username: string, score?: number,) =>
     fetch('/api/scores', {
         method: score === undefined ? 'GET' : 'POST',
         cache: 'no-cache',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: score === undefined ? undefined : JSON.stringify({ score })
+        body: score === undefined ? undefined : JSON.stringify({ score, username })
     }).then((res) => res.json());
 
 type Score = {
@@ -23,7 +23,11 @@ type GameScoreboardProps = {
 };
 
 const GameScoreboard = ({ score: s }: GameScoreboardProps) => {
-    const { data } = useSWR([s], scoreFetcher);
+    const {
+        playerName,
+    } = useGameContext();
+
+    const { data } = useSWR([playerName.current, s], scoreFetcher);
     console.log(data);
     if (data === undefined) {
         return (
