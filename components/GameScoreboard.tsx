@@ -32,7 +32,7 @@ const GameScoreboard = ({ score: s }: GameScoreboardProps) => {
         revalidateOnFocus: false,
         revalidateOnReconnect: false
     });
-    console.log(data);
+
     if (data === undefined) {
         return (
             <div className="absolute inset-0 flex justify-center items-center z-10">
@@ -87,7 +87,6 @@ const GameScoreboard = ({ score: s }: GameScoreboardProps) => {
                     </table>
                 )}
             </div>
-
         </div>
     );
 };
