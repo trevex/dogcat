@@ -14,7 +14,7 @@ if (uri === "") {
     const port = process.env.DB_PORT || "";
     const database = process.env.DB_DATABASE || "";
     if (dialect !== "") { // A dialect is specifed and uri not, so let's construct it ourselves
-        uri = dialect + "://" + username + (password !== "" ? ":" + password : "") + "@" + host + (port !== "" ? ":" + port : "") + "/" + database;
+        uri = dialect + "://" + username + (password !== "" ? ":" + password : "") + "@" + encodeURIComponent(host) + (port !== "" ? ":" + port : "") + "/" + database;
     }
 }
 
