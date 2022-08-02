@@ -30,6 +30,12 @@ const sequelize = (uri !== "" ?
     })
 );
 
+try {
+    await sequelize.authenticate()
+} catch (err) {
+    console.error('Unable to connect to the database:', err)
+}
+
 sequelize.addModels([Score]);
 
 await sequelize.sync({ alter: process.env.NODE_ENV === 'development' })
