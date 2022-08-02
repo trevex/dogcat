@@ -18,6 +18,8 @@ if (host !== "") { // If host is specified let's construct a URI
 
 const logging = process.env.NODE_ENV === 'production' ? false : console.log
 
+console.log('Connecting to database with:', (uri !== "" ? "URI" : "SOCKET " + socket))
+
 const sequelize = (uri !== "" ?
     new Sequelize(uri, { logging }) :
     new Sequelize(database, username, password, {
