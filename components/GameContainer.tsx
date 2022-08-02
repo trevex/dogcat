@@ -31,6 +31,10 @@ const GameContainer = ({ children }: PropsWithChildren<GameContainerProps>) => {
     } = useGameContext();
 
     const handleInputPlayerName = (event: ChangeEvent<HTMLInputElement>) => {
+        if (event.target.value === "") {
+            playerName.current = "anonymous";
+            return
+        }
         playerName.current = event.target.value;
     }
 
