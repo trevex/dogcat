@@ -27,7 +27,11 @@ const GameScoreboard = ({ score: s }: GameScoreboardProps) => {
         playerName,
     } = useGameContext();
 
-    const { data } = useSWR([playerName.current, s], scoreFetcher);
+    const { data } = useSWR([playerName.current, s], scoreFetcher, {
+        revalidateIfStale: true,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false
+    });
     console.log(data);
     if (data === undefined) {
         return (
