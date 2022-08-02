@@ -10,6 +10,7 @@ export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse<Score[] | Error>
 ) {
+    let recentScore: Score | undefined;
     if (req.method === 'POST') { // If method was POST, we also add a new score!
         const username = "foobar"; // TODO: get from IAP header
         const {
@@ -20,13 +21,34 @@ export default async function handler(
             return;
         }
         Date.now()
-        await Score.create({
+        recentScore = await Score.create({
             username,
             score,
         });
+        recentScore = recentScore.toJSON()
     }
 
     // We always return the scores...
-    const scores = await Score.findAll({ limit: 20 });
-    res.status(200).json(scores.map((s) => s.toJSON()));
+    const results = await Score.findAll({
+        limit: 10,
+        order: [
+            ['score', 'DESC'], // We sort by score
+        ],
+    });
+    const scores = results.map((s) => s.toJSON());
+
+    // Let's see if recentScore was set, and if so, we check if we still need to
+    // add it to our return values
+    if (recentScore !== undefined) {
+        if (scores.findIndex((s) => s.id === recentScore!.id) < 0) {
+            // Score is not listed yet
+            scores.pop(); // So let's remove last element and insert it
+            scores.push(recentScore);
+        }
+    }
+
+    // Let's mark the recent score
+    const scoresWithMarker = scores.map((s) => ({ recent: s.id === recentScore?.id, ...s }));
+
+    res.status(200).json(scoresWithMarker);
 }

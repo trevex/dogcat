@@ -38,7 +38,7 @@ const GameContainer = ({ children }: PropsWithChildren<GameContainerProps>) => {
                     </div>
                 </div>
                 <div className="flex content-between">
-                    <div className="grid grid-flow-col auto-cols-max content-end">
+                    <div className="grid grid-flow-col auto-cols-max content-end -mb-2">
                         <Image alt="Cat 1" src={cat1} width={64} height={64} />
                         <Image alt="Cat 2" src={cat2} width={64} height={64} />
                         <Image alt="Cat 3" src={cat3} width={64} height={64} />
@@ -70,7 +70,7 @@ const GameContainer = ({ children }: PropsWithChildren<GameContainerProps>) => {
                         </div>
                         <p className={`font-sans text-2xl text-center ${status === Status.Lost ? "text-red-600 font-bold" : ""}`}>Score: {score}</p>
                     </div>
-                    <div className="grid grid-flow-col auto-cols-max content-end">
+                    <div className="grid grid-flow-col auto-cols-max content-end -mb-2">
                         <Image alt="Dog 1" src={dog1} width={64} height={64} />
                         <Image alt="Dog 2" src={dog2} width={64} height={64} />
                         <Image alt="Dog 3" src={dog3} width={64} height={64} />
