@@ -1,4 +1,4 @@
-import { PropsWithChildren, useState, useEffect, useRef, createContext, useContext, MutableRefObject, MouseEvent, NativeMouseEvent } from 'react';
+import { PropsWithChildren, useState, useEffect, useRef, createContext, useContext, MutableRefObject } from 'react';
 import useSWR from 'swr';
 
 export enum Direction {
