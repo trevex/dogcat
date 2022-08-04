@@ -43,14 +43,14 @@ const GameContainer = ({ children }: PropsWithChildren<GameContainerProps>) => {
             <div className="grid grid-flow-row auto-rows-max">
                 <div className="flex justify-center">
                     <div>
-                        <Image alt="Logo" src={dogcat} width={405} height={90} />
+                        <Image className="max-w-xs md:max-w-xl" alt="Logo" src={dogcat} width={405} height={90} />
                     </div>
                 </div>
                 <div className="flex justify-center">
-                    <input className="w-96 p-3 text-sm border-red-200 rounded-lg" placeholder="Type in your player name" type="text" onChange={handleInputPlayerName} />
+                    <input className="w-48 md:w-96 p-3 text-sm border-red-200 rounded-lg" placeholder="Type in your player name" type="text" onChange={handleInputPlayerName} />
                 </div>
                 <div className="flex content-between">
-                    <div className="grid grid-flow-col auto-cols-max content-end -mb-2">
+                    <div className="grid-flow-col auto-cols-max content-end -mb-2 hidden md:grid">
                         <Image alt="Cat 1" src={cat1} width={64} height={64} />
                         <Image alt="Cat 2" src={cat2} width={64} height={64} />
                         <Image alt="Cat 3" src={cat3} width={64} height={64} />
@@ -82,15 +82,17 @@ const GameContainer = ({ children }: PropsWithChildren<GameContainerProps>) => {
                         </div>
                         <p className={`font-sans text-2xl text-center ${status === Status.Lost ? "text-red-600 font-bold" : ""}`}>Score: {score}</p>
                     </div>
-                    <div className="grid grid-flow-col auto-cols-max content-end -mb-2">
+                    <div className="grid-flow-col auto-cols-max content-end -mb-2 hidden md:grid">
                         <Image alt="Dog 1" src={dog1} width={64} height={64} />
                         <Image alt="Dog 2" src={dog2} width={64} height={64} />
                         <Image alt="Dog 3" src={dog3} width={64} height={64} />
                         <Image alt="Dog 4" src={dog4} width={64} height={64} />
                     </div>
                 </div>
-                <div className="border-solid border-8 border-black rounded-lg relative">
-                    {children}
+                <div className="relative">
+                    <div className="border-solid border-8 border-black rounded-lg max-w-fit">
+                        {children}
+                    </div>
                     {status === Status.NewGame || status === Status.Lost ? <GameScoreboard score={status === Status.Lost ? score : undefined} /> : null}
                 </div>
                 <div className="m-auto">

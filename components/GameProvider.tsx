@@ -1,4 +1,4 @@
-import { PropsWithChildren, useState, useEffect, useRef, createContext, useContext, MutableRefObject } from 'react';
+import { PropsWithChildren, useState, useEffect, useRef, createContext, useContext, MutableRefObject, MouseEvent, NativeMouseEvent } from 'react';
 import useSWR from 'swr';
 
 export enum Direction {
@@ -54,6 +54,7 @@ type GameContextType = {
     resumeGame: () => void;
     pauseGame: () => void;
     stopGame: () => void;
+    handleClick: (event: any) => void;
 };
 
 const GameContext = createContext<GameContextType | null>(null);
@@ -209,21 +210,25 @@ export const GameProvider = ({ rows, columns, children }: PropsWithChildren<Game
         }
     };
 
+    const swapControl = () => {
+        control.current = (control.current === Controller.Dog) ? Controller.Cat : Controller.Dog;
+        // Changing control requires us to also figure out which direction to move back in
+        const es = (control.current === Controller.Dog) ? dogCat.slice(-2).reverse() : dogCat.slice(0, 2);
+        const dx = es[0].x - es[1].x;
+        const dy = es[0].y - es[1].y;
+        direction.current =
+            (dx > 0) && Direction.Right ||
+            (dx < 0) && Direction.Left ||
+            (dy > 0) && Direction.Down || Direction.Up;
+    };
+
     const handleKeyDown = (event: KeyboardEvent) => {
         event.preventDefault()
         if (event.code === "KeyP") {
             pauseGame();
         }
-        // Changing control requires us to also figure out which direction to move back in
         if (event.code === "Space") {
-            control.current = (control.current === Controller.Dog) ? Controller.Cat : Controller.Dog;
-            const es = (control.current === Controller.Dog) ? dogCat.slice(-2).reverse() : dogCat.slice(0, 2);
-            const dx = es[0].x - es[1].x;
-            const dy = es[0].y - es[1].y;
-            direction.current =
-                (dx > 0) && Direction.Right ||
-                (dx < 0) && Direction.Left ||
-                (dy > 0) && Direction.Down || Direction.Up;
+            swapControl();
         }
         // Let's see if we explicitly change direction.
         // We have to make sure direction is "allowed"!
@@ -236,6 +241,37 @@ export const GameProvider = ({ rows, columns, children }: PropsWithChildren<Game
             null;
         if (d !== null) {
             direction.current = d;
+        }
+    };
+
+
+    const handleClick = (event: any) => {
+        // Event handling is a bit of a pain with so let's assume a native event
+        // and check for availability
+        if (event.offsetX === undefined || event.offsetY === undefined || event.target === undefined || event.target.width === undefined || event.target.height === undefined) {
+            return
+        }
+        const x = event.offsetX, y = event.offsetY;
+        const width = event.target.width, height = event.target.height;
+        const widthHalf = width / 2, heightHalf = height / 2;
+        const dx = width / 10, dy = height / 10;
+        const c = direction.current;
+        if (c === Direction.Up || c === Direction.Down) { // We can only move left or right
+            if (x > widthHalf - dx && x < widthHalf + dx) { // Tapped in the center let's swap
+                swapControl();
+            } else if (x < widthHalf) { // Left
+                direction.current = Direction.Left;
+            } else { // Right
+                direction.current = Direction.Right;
+            }
+        } else { // Only up or down
+            if (y > heightHalf - dy && y < heightHalf + dy) { // Tapped in the center let's swap
+                swapControl();
+            } else if (y < heightHalf) { // Up
+                direction.current = Direction.Up;
+            } else { // Down
+                direction.current = Direction.Down;
+            }
         }
     };
 
@@ -264,5 +300,5 @@ export const GameProvider = ({ rows, columns, children }: PropsWithChildren<Game
     }, [status, updateCount]);
 
 
-    return <GameContext.Provider value={{ status, dogCat, foods, score, control, direction, rows, columns, resetGame, startGame, stopGame, pauseGame, resumeGame, playerName }}>{children}</GameContext.Provider>;
+    return <GameContext.Provider value={{ status, dogCat, foods, score, control, direction, rows, columns, resetGame, startGame, stopGame, pauseGame, resumeGame, playerName, handleClick }}>{children}</GameContext.Provider>;
 };

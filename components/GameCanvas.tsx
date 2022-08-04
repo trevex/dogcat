@@ -1,4 +1,4 @@
-import { ReactElement } from 'react';
+import { ReactElement, MouseEvent } from 'react';
 import { Stage, Layer, Rect, Image, Line } from 'react-konva';
 import useImage from 'use-image';
 
@@ -34,6 +34,7 @@ const GameCanvas = ({
         foods,
         control,
         rows, columns,
+        handleClick
     } = useGameContext();
     const gridColor0 = "#eeeeee";
     const gridColor1 = "#dddddd";
@@ -115,7 +116,7 @@ const GameCanvas = ({
     }
 
     return (
-        <Stage width={width} height={height}>
+        <Stage width={width} height={height} onClick={(e: any) => handleClick(e.evt)}>
             <Layer>
                 {gridElements}
             </Layer>

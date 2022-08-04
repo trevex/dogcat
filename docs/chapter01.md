@@ -181,3 +181,5 @@ The team has quickly and successfully delivered DogCat to a delighted group of b
 
 2. The service account used by the Cloud Run service has access to ALL Cloud SQL databases in the GCP project. Following the principle of least privilege, it should only have access to the dogcat database.
 
+3. The team also noticed that image sizes are fairly large and is keeping this in mind as future optimization as this can impact how fast the application can scale up.
+
