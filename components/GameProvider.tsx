@@ -246,7 +246,6 @@ export const GameProvider = ({ rows, columns, children }: PropsWithChildren<Game
 
 
     const handleClick = (event: any) => {
-        console.log(event);
         if (status !== Status.Running) return;
         // Event handling is a bit of a pain with so let's assume a native event
         // and check for availability
@@ -266,12 +265,9 @@ export const GameProvider = ({ rows, columns, children }: PropsWithChildren<Game
             var rect = event.target.getBoundingClientRect();
             x = event.changedTouches[0].pageX - rect.left;
             y = event.changedTouches[0].pageY - rect.top;
-            console.log(rect);
         } else {
             return;
         }
-        console.log(x, y);
-        console.log(width, height);
         const widthHalf = width / 2, heightHalf = height / 2;
         const dx = width / 10, dy = height / 10;
         const c = direction.current;
