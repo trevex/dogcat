@@ -97,7 +97,10 @@ const GameContainer = ({ children }: PropsWithChildren<GameContainerProps>) => {
                 </div>
                 <div className="m-auto">
                     <span className="font-sans">
-                        ☛ Use the <b>arrow-keys</b> to <b>change the direction</b>. <br />
+                        ☛ <b>Dogs</b> eat <b>sausages</b> and <b>cats</b> love <b>tuna</b>. <br />
+                        ☛ <b>Touch the edges</b> of the play-area to <b>change direction</b>. <br />
+                        ☛ <b>Touch the center</b> to swap between <b>cat or dog</b>. <br />
+                        ☛ Alternatively, use the <b>arrow-keys</b> to <b>change the direction</b>. <br />
                         ☛ With <b>space</b> control can be changes between <b>dog or cat</b>.
                     </span>
                 </div>
