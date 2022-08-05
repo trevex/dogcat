@@ -116,7 +116,7 @@ const GameCanvas = ({
     }
 
     return (
-        <Stage width={width} height={height} onClick={(e: any) => handleClick(e.evt)}>
+        <Stage width={width} height={height} onTap={(e: any) => handleClick(e.evt)} onClick={(e: any) => handleClick(e.evt)}>
             <Layer>
                 {gridElements}
             </Layer>

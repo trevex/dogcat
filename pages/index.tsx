@@ -40,7 +40,7 @@ const Home: NextPage = () => {
     } else if (windowSize.width >= windowSize.height) {
         canvasSize = Math.min(canvasSizeMax, Math.floor(windowSize.height * 0.7));
     } else {
-        canvasSize = Math.min(canvasSizeMax, Math.floor(windowSize.width * 0.9));
+        canvasSize = Math.min(canvasSizeMax, Math.floor(windowSize.width * 0.85));
     }
 
     return (

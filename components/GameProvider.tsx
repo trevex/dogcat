@@ -246,13 +246,32 @@ export const GameProvider = ({ rows, columns, children }: PropsWithChildren<Game
 
 
     const handleClick = (event: any) => {
+        console.log(event);
+        if (status !== Status.Running) return;
         // Event handling is a bit of a pain with so let's assume a native event
         // and check for availability
-        if (event.offsetX === undefined || event.offsetY === undefined || event.target === undefined || event.target.width === undefined || event.target.height === undefined) {
-            return
+        if (event.target === undefined || event.target.clientWidth === undefined || event.target.clientHeight === undefined) {
+            return;
         }
-        const x = event.offsetX, y = event.offsetY;
-        const width = event.target.width, height = event.target.height;
+        const width = event.target.clientWidth, height = event.target.clientHeight;
+        let x = 0, y = 0;
+        if (event.offsetX !== undefined && event.offsetY !== undefined) { // MouseEvent
+            x = event.offsetX;
+            y = event.offsetY;
+        } else if (event.targetTouches !== undefined && event.targetTouches.length > 0) { // TouchEvent
+            var rect = event.target.getBoundingClientRect();
+            x = event.targetTouches[0].pageX - rect.left;
+            y = event.targetTouches[0].pageY - rect.top;
+        } else if (event.changedTouches !== undefined && event.changedTouches.length > 0) { // TouchEvent
+            var rect = event.target.getBoundingClientRect();
+            x = event.changedTouches[0].pageX - rect.left;
+            y = event.changedTouches[0].pageY - rect.top;
+            console.log(rect);
+        } else {
+            return;
+        }
+        console.log(x, y);
+        console.log(width, height);
         const widthHalf = width / 2, heightHalf = height / 2;
         const dx = width / 10, dy = height / 10;
         const c = direction.current;
