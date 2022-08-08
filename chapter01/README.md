@@ -134,7 +134,7 @@ Step 2: Select "Cloud Source Repositories" as the provider and "dogcat" as the r
 
 ![Step 2](docs/images/chapter01-step02.png)
 
-Step 3: The team wants to trigger a new build anytime the main branch changes. Fill out the "Build Configuration" as shown below and click "Save":
+Step 3: The team wants to trigger a new build anytime the main branch changes. Fill out the "Build Configuration" as shown below and click "Save". If this repository is used directly make sure to use `/chapter01/Dockerfile` instead:
 
 ![Step 3](docs/images/chapter01-step03.png)
 
