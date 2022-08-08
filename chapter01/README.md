@@ -124,47 +124,47 @@ We will create the Cloud Run service using the GCP console to make use of its ab
 
 From the console, go to the Cloud Run tab and click the "Create Service" button:
 
-![Step 0](images/chapter01-step00.png)
+![Step 0](docs/images/chapter01-step00.png)
 
 Step 1: Select continuous deployment from a source repository and continue to the setup wizard by clicking the "Set up with Cloud Build" button underneath.
 
-![Step 1](images/chapter01-step01.png)
+![Step 1](docs/images/chapter01-step01.png)
 
 Step 2: Select "Cloud Source Repositories" as the provider and "dogcat" as the repository then click "Next":
 
-![Step 2](images/chapter01-step02.png)
+![Step 2](docs/images/chapter01-step02.png)
 
 Step 3: The team wants to trigger a new build anytime the main branch changes. Fill out the "Build Configuration" as shown below and click "Save":
 
-![Step 3](images/chapter01-step03.png)
+![Step 3](docs/images/chapter01-step03.png)
 
 Step 4: To keep cost to a minimum, the team will stick with the "CPU is throttled outside of request" option for CPU allocation. The service should be public and therefore they allow ingress. Fill out the values as follows and click the expansion arroiw of the "Container, Connections, Security" section:
 
-![Step 4](images/chapter01-step04.png)
+![Step 4](docs/images/chapter01-step04.png)
 
 Step 5: In the "Container" tab we need to specify the correct port and setup the environment variables to provide the database configuration to our service. The required environment variables are `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE` and `DB_SOCKET`. The last one is particularly important as when database connections are added to a Cloud Run service they are exposed as sockets in the `/cloudsql/` folder (**use the Cloud SQL instance name you made note of in the previous section**).
 
-![Step 5](images/chapter01-step05.png)
+![Step 5](docs/images/chapter01-step05.png)
 
 Step 6: We continue to the "Connections" tab and actually add the required connection to our created database instance.
 
-![Step 6](images/chapter01-step06.png)
+![Step 6](docs/images/chapter01-step06.png)
 
 Step 7: Next we navigate to the "Security" tab and make sure to select our created Service Account with access to the database:
 
-![Step 7](images/chapter01-step07.png)
+![Step 7](docs/images/chapter01-step07.png)
 
 Step 8: Finally we click "Create" at the very bottom of the configuration page:
 
-![Step 8](images/chapter01-step08.png)
+![Step 8](docs/images/chapter01-step08.png)
 
 Step 9: Now we are greeted with information about our newly created Cloud Run service. However at this point in time our service will not yet be fully available. We are still waiting for Cloud Build to finish building our application:
 
-![Step 9](images/chapter01-step09.png)
+![Step 9](docs/images/chapter01-step09.png)
 
 Step 10: After a few minutes our first Cloud Build is finished and our first revision is live:
 
-![Step 10](images/chapter01-step10.png)
+![Step 10](docs/images/chapter01-step10.png)
 
 ### Testing
 
