@@ -46,6 +46,7 @@
             gnumake
             findutils
             tmux
+            terraform
           ];
         };
       }
