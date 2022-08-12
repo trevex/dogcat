@@ -19,9 +19,8 @@ steps:
   - '-c'
   - |
       cd chapter02a
-      environments="$_PLAN_ENV,$_TARGET_ENV"
       IFS=","
-      for env in $environments
+      for env in $_PLAN_ENV
       do
         if [ ! -z "${env}" ] && [ -d "environments/${env}" ]; then
           echo ""

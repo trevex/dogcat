@@ -138,10 +138,12 @@ resource "google_cloudbuild_trigger" "build" {
     "dev" = {
       branch_name       = "develop"
       approval_required = false
+      plan_environments = ["stage"]
     }
     "stage" = {
       branch_name       = "main"
       approval_required = false
+      plan_environments = ["prod", "shared"]
     }
     "prod" = {
       branch_name       = "main"
@@ -158,6 +160,7 @@ resource "google_cloudbuild_trigger" "build" {
   filename        = "chapter02a/cloudbuild.yaml"
   substitutions = {
     _TARGET_ENV = each.key
+    _PLAN_ENV   = join(",", concat(lookup(each.value, "plan_environment", []), [each.key]))
   }
 
   trigger_template {
