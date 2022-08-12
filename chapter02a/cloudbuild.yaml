@@ -13,22 +13,21 @@ steps:
 
 - id: 'tf init'
   name: 'hashicorp/terraform:1.2.5'
-  entrypoint: 'bash'
+  entrypoint: 'sh'
   args:
   - '-c'
   - |
-    cd chapter02a
-    ALL_ENV="${_PLAN_ENV},${_TARGET_ENV}"
-    IFS=","
-    for ENV in $$ALL_ENV; do
-      if [ ! -z "$${ENV}" ] && [ -d "environments/$${ENV}" ]; then
-        echo ""
-        echo "*************** TERRAFORM INIT ******************"
-        echo "******* At environment: $${ENV} ********"
-        echo "*************************************************"
-        terraform -chdir="environments/$${ENV}" init || exit 1
-      fi
-    done
+      cd chapter02a
+      envs="$_PLAN_ENV,$_TARGET_ENV"
+      IFS="," for env in $envs; do
+        if [ ! -z "${env}" ] && [ -d "environments/${env}" ]; then
+          echo ""
+          echo "*************** TERRAFORM INIT ******************"
+          echo "******* At environment: ${env} ********"
+          echo "*************************************************"
+          terraform -chdir="environments/${env}" init || exit 1
+        fi
+      done
 
 # - id: 'tf plan'
 #   name: 'hashicorp/terraform:1.2.5'
