@@ -19,9 +19,11 @@ steps:
   - '-c'
   - |
       cd chapter02a
-      IFS=","
-      for env in $_PLAN_ENV
-      do
+      echo "Working with environments: ${_PLAN_ENV}"
+      IFS=,
+      for env in $_PLAN_ENV; do
+        echo ""
+        echo "******* Checking environment: ${env} *******"
         if [ ! -z "${env}" ] && [ -d "environments/${env}" ]; then
           echo ""
           echo "*************** TERRAFORM INIT ******************"
