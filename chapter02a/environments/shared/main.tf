@@ -133,20 +133,17 @@ resource "google_cloudbuild_trigger" "build" {
     }
   }
 
-  name = "build-tf-${each.key}"
+  name            = "build-tf-${each.key}"
+  service_account = google_service_account.build[each.key].id
+  filename        = "chapter02a/cloudbuild.yaml"
+  substitutions = {
+    _TARGET_ENV = each.key
+  }
 
   trigger_template {
     branch_name = each.value.branch_name
     repo_name   = local.source_repository.name
   }
-
-  substitutions = {
-    _TARGET_ENV = each.key
-  }
-
-  service_account = google_service_account.build[each.key].id
-
-  filename = "chapter02a/cloudbuild.yaml"
 
   approval_config {
     approval_required = each.value.approval_required
