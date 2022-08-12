@@ -15,6 +15,7 @@ provider "google-beta" {
   region  = var.region
 }
 
+
 # Enable required APIs
 
 resource "google_project_service" "services" {
@@ -28,6 +29,7 @@ resource "google_project_service" "services" {
   service = each.value
 }
 
+
 # Let's create our artifact registry for our container-images
 
 resource "google_artifact_registry_repository" "images" {
@@ -38,6 +40,7 @@ resource "google_artifact_registry_repository" "images" {
 
   depends_on = [google_project_service.services]
 }
+
 
 # And we give all our compute in cluster projects reader access to container-images
 
@@ -55,6 +58,7 @@ resource "google_artifact_registry_repository_iam_member" "compute_ar_reader" {
   role       = "roles/artifactregistry.reader"
   member     = "serviceAccount:${data.google_project.cluster_project[each.key].number}-compute@developer.gserviceaccount.com"
 }
+
 
 # We either create the required repository used for our terraform code or use the specifed one.
 
@@ -75,6 +79,7 @@ data "google_sourcerepo_repository" "repo" {
 locals {
   source_repository = var.create_source_repository ? google_sourcerepo_repository.repo[0] : data.google_sourcerepo_repository.repo[0]
 }
+
 
 # We set up the build triggers required to roll out the terraform code
 # There will be separate triggers for each environment and each trigger is
@@ -127,8 +132,6 @@ resource "google_project_iam_member" "build_access_project" {
   role     = each.value.to_env == each.value.from_env ? "roles/editor" : "roles/viewer"
   member   = "serviceAccount:${google_service_account.build[each.value.from_env].email}"
 }
-
-
 
 resource "google_cloudbuild_trigger" "build" {
   for_each = {

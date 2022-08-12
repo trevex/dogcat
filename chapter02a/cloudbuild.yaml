@@ -1,5 +1,6 @@
 options:
   logging: CLOUD_LOGGING_ONLY
+
 steps:
 - id: 'target env'
   name: 'alpine'
@@ -18,8 +19,9 @@ steps:
   - '-c'
   - |
       cd chapter02a
-      envs="$_PLAN_ENV,$_TARGET_ENV"
-      IFS="," for env in $envs; do
+      IFS=","
+      for env in "$_PLAN_ENV,$_TARGET_ENV"
+      do
         if [ ! -z "${env}" ] && [ -d "environments/${env}" ]; then
           echo ""
           echo "*************** TERRAFORM INIT ******************"

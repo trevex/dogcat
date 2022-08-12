@@ -27,7 +27,7 @@ resource "google_project_service" "services" {
 }
 
 module "network" {
-  source = "../modules//network"
+  source = "../../modules//network"
 
   name = "dev-network"
   subnetworks = [{
@@ -56,7 +56,7 @@ data "http" "myip" {
 
 
 module "cluster" {
-  source = "../modules//cluster"
+  source = "../../modules//cluster"
 
   name                   = "dev-cluster"
   region                 = var.region
