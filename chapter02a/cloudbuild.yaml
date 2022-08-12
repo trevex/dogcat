@@ -20,13 +20,13 @@ steps:
     cd chapter02a
     ALL_ENV="${_PLAN_ENV},${_TARGET_ENV}"
     IFS=","
-    for ENV in $ALL_ENV; do
-      if [ ! -z "${ENV}" ] && [ -d "environments/${ENV}" ]; then
+    for ENV in $$ALL_ENV; do
+      if [ ! -z "$${ENV}" ] && [ -d "environments/$${ENV}" ]; then
         echo ""
         echo "*************** TERRAFORM INIT ******************"
-        echo "******* At environment: ${ENV} ********"
+        echo "******* At environment: $${ENV} ********"
         echo "*************************************************"
-        terraform -chdir="environments/${ENV}" init || exit 1
+        terraform -chdir="environments/$${ENV}" init || exit 1
       fi
     done
 
