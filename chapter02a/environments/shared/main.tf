@@ -19,6 +19,7 @@ provider "google-beta" {
 
 resource "google_project_service" "services" {
   for_each = toset([
+    "iam.googleapis.com",
     "cloudbuild.googleapis.com",
     "artifactregistry.googleapis.com",
     "sourcerepo.googleapis.com",
@@ -106,12 +107,28 @@ resource "google_service_account" "build" {
   display_name = "Service Account used by Cloud Build to rollout ${each.value}-environment."
 }
 
-resource "google_project_iam_member" "build" {
+resource "google_project_iam_member" "build_act_as" {
+  for_each = local.environments
+  project  = var.project
+  role     = "roles/iam.serviceAccountUser"
+  member   = "serviceAccount:${google_service_account.build[each.value].email}"
+}
+
+resource "google_project_iam_member" "build_logs_writer" {
+  for_each = local.environments
+  project  = var.project
+  role     = "roles/logging.logWriter"
+  member   = "serviceAccount:${google_service_account.build[each.value].email}"
+}
+
+resource "google_project_iam_member" "build_access_project" {
   for_each = local.permission_mappings
   project  = each.value.to_project
   role     = each.value.to_env == each.value.from_env ? "roles/editor" : "roles/viewer"
   member   = "serviceAccount:${google_service_account.build[each.value.from_env].email}"
 }
+
+
 
 resource "google_cloudbuild_trigger" "build" {
   for_each = {
@@ -151,6 +168,8 @@ resource "google_cloudbuild_trigger" "build" {
 
   depends_on = [
     google_project_service.services,
-    google_project_iam_member.build
+    google_project_iam_member.build_act_as,
+    google_project_iam_member.build_logs_writer,
+    google_project_iam_member.build_access_project,
   ]
 }
