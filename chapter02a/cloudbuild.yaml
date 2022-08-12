@@ -21,8 +21,12 @@ steps:
       cd chapter02a
       echo "Planning environments: ${_PLAN_ENV}"
       echo "Target environment: ${_TARGET_ENV}"
-      IFS=,
-      for env in $_PLAN_ENV; do
+      envs=$_PLAN_ENV
+      while
+        env=${envs%%,*}
+        envs=${envs#*,}
+        [ "$env" != "$envs" ]
+      do
         echo ""
         echo "******* Checking environment: ${env} *******"
         if [ -d "environments/${env}" ]; then
