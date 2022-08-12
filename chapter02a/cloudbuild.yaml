@@ -20,9 +20,9 @@ steps:
   - |
       cd chapter02a
       echo "Planning environments: ${_PLAN_ENV}"
-      echo "Targeting environment: ${_TARGET_ENV}"
+      echo "Target environment: ${_TARGET_ENV}"
       IFS=,
-      for env in $$_PLAN_ENV; do
+      for env in $_PLAN_ENV; do
         echo ""
         echo "******* Checking environment: ${env} *******"
         if [ -d "environments/${env}" ]; then
@@ -31,6 +31,9 @@ steps:
           echo "******* At environment: ${env} ********"
           echo "*************************************************"
           terraform -chdir="environments/${env}" init || exit 1
+        else
+          echo ""
+          echo "******* Not found: ${env} *******"
         fi
       done
 
