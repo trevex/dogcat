@@ -34,7 +34,7 @@ steps:
           echo "*************** TERRAFORM INIT ******************"
           echo "******* At environment: ${env} ********"
           echo "*************************************************"
-          terraform -chdir="environments/${env}" -no-color init || exit 1
+          terraform -chdir="environments/${env}" init -no-color || exit 1
         else
           echo ""
           echo "******* Not found: ${env} *******"
