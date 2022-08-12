@@ -19,9 +19,10 @@ steps:
   - '-c'
   - |
       cd chapter02a
-      echo "Working with environments: ${_PLAN_ENV}"
+      echo "Planning environments: ${_PLAN_ENV}"
+      echo "Targeting environment: ${_TARGET_ENV}"
       IFS=,
-      for env in $_PLAN_ENV; do
+      for env in $$_PLAN_ENV; do
         echo ""
         echo "******* Checking environment: ${env} *******"
         if [ -d "environments/${env}" ]; then
