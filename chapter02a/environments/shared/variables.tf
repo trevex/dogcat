@@ -9,3 +9,11 @@ variable "region" {
 variable "cluster_projects" {
   type = set(string)
 }
+
+variable "source_repository_name" {
+  type = string
+}
+
+variable "create_source_repository" {
+  type = bool
+}

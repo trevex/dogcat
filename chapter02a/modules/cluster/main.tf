@@ -1,5 +1,17 @@
+resource "google_service_account" "cluster" {
+  account_id   = var.name
+  display_name = "SA used by cluster ${var.name}"
+}
 
-resource "google_container_cluster" "primary" {
+# We are creating an autopilot cluster so some tfsec rules create false positives, we ignore them:
+#tfsec:ignore:google-gke-enforce-pod-security-policy
+#tfsec:ignore:google-gke-metadata-endpoints-disabled
+#tfsec:ignore:google-gke-enable-network-policy
+#tfsec:ignore:google-gke-node-metadata-security
+#tfsec:ignore:google-gke-use-cluster-labels
+resource "google_container_cluster" "cluster" {
+  provider = google-beta
+
   name     = var.name
   location = var.region
 
@@ -30,6 +42,13 @@ resource "google_container_cluster" "primary" {
         cidr_block   = cidr_blocks.value
       }
     }
+  }
+
+  node_config {
+    service_account = google_service_account.cluster.email
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
   }
 
   timeouts {

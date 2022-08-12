@@ -47,6 +47,9 @@
             findutils
             tmux
             terraform
+            tfsec
+            checkov
+            tflint
           ];
         };
       }
