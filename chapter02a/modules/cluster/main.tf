@@ -1,8 +1,3 @@
-resource "google_service_account" "cluster" {
-  account_id   = var.name
-  display_name = "SA used by cluster ${var.name}"
-}
-
 # We are creating an autopilot cluster so some tfsec rules create false positives, we ignore them:
 #tfsec:ignore:google-gke-enforce-pod-security-policy
 #tfsec:ignore:google-gke-metadata-endpoints-disabled
@@ -57,13 +52,6 @@ resource "google_container_cluster" "cluster" {
         cidr_block   = cidr_blocks.value
       }
     }
-  }
-
-  node_config {
-    service_account = google_service_account.cluster.email
-    oauth_scopes = [
-      "https://www.googleapis.com/auth/cloud-platform"
-    ]
   }
 
   timeouts {
