@@ -75,6 +75,7 @@ steps:
 
 - id: 'checkov'
   name: 'bridgecrew/checkov:2.1.125'
+  entrypoint: 'sh'
   args:
   - '-c'
   - |
@@ -117,7 +118,7 @@ steps:
         echo "*************** TERRAFORM APPLY ******************"
         echo "******* At environment: ${env} ********"
         echo "*************************************************"
-        terraform  -chdir="environments/${env}" apply -auto-approve -no-color || exit 1
+        terraform -chdir="environments/${env}" apply -auto-approve -no-color || exit 1
       else
         echo ""
         echo "******* Not found (or skipping empty variable): ${env} *******"
