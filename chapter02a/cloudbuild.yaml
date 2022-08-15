@@ -76,7 +76,13 @@ steps:
 - id: 'checkov'
   name: 'bridgecrew/checkov:2.1.125'
   args:
-  - '-d chapter02a/'
+  - '-c'
+  - |
+      cd chapter02a
+      echo "***********************"
+      echo "Running checkov for all environments"
+      echo "***********************"
+      checkov -d . || exit 1
 
 # - id: 'tf plan'
 #   name: 'hashicorp/terraform:1.2.5'
