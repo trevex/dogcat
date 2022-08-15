@@ -33,6 +33,7 @@ resource "google_project_service" "services" {
 # Let's create our artifact registry for our container-images
 
 resource "google_artifact_registry_repository" "images" {
+  #checkov:skip=CKV_GCP_84:We do not want to use CSEK
   location      = var.region
   repository_id = "images"
   description   = "Primary container-image registry"

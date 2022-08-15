@@ -12,14 +12,16 @@ locals {
 
 # Let's create the specified subnetworks
 resource "google_compute_subnetwork" "subnetworks" {
+  #checkov:skip=CKV_GCP_26:We do not use VPC Flow Logs in this demo
   for_each = local.subnets_map
   name     = each.key
   network  = google_compute_network.network.id
   region   = each.value.region
 
-  private_ip_google_access = true
-  ip_cidr_range            = each.value.ip_cidr_range
-  purpose                  = "PRIVATE"
+  private_ip_google_access   = true
+  private_ipv6_google_access = true
+  ip_cidr_range              = each.value.ip_cidr_range
+  purpose                    = "PRIVATE"
 
   secondary_ip_range = each.value.secondary_ip_range
 }

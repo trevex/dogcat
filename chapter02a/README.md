@@ -12,6 +12,10 @@ terraform -chdir=environments/shared init
 terraform -chdir=environments/shared apply # explain everything that is created!
 ```
 
+```
+git remote add chapter02a ssh://admin@nvoss.altostrat.com@source.developers.google.com:2022/p/nvoss-dogcat-chapter-02-shared/r/infrastructure
+```
+
 Alt: use https://github.com/marketplace/google-cloud-build instead of source repo
 ==> https://cloud.google.com/architecture/managing-infrastructure-as-code
 

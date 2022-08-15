@@ -32,3 +32,8 @@ variable "master_authorized_networks_config" {
   type        = map(string)
   description = "Maps of authorizted networks using key as name and value as CIDR-block"
 }
+
+variable "release_channel" {
+  type    = string
+  default = "REGULAR"
+}

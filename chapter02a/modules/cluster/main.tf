@@ -10,6 +10,17 @@ resource "google_service_account" "cluster" {
 #tfsec:ignore:google-gke-node-metadata-security
 #tfsec:ignore:google-gke-use-cluster-labels
 resource "google_container_cluster" "cluster" {
+  #checkov:skip=CKV_GCP_21:We do not use labels in this demo
+  #checkov:skip=CKV_GCP_61:We do not use VPC Flow Logs in this demo
+  #checkov:skip=CKV_GCP_66:TODO let's enable Binary Auth in the future!
+  #checkov:skip=CKV_GCP_12:We do not use Network Policies in this demo
+  #checkov:skip=CKV_GCP_65:Well, to simplify the demo we do not use Google Groups in GKE
+  #checkov:skip=CKV_GCP_68:Node configuration irrelevant for Autopilot
+  #checkov:skip=CKV_GCP_69:Node configuration irrelevant for Autopilot
+  #checkov:skip=CKV_GCP_19:Disabled on Autopilot by default => false positive
+  #checkov:skip=CKV_GCP_67:Legacy compute instance metadata API not relevant on Autopilot
+  #checkov:skip=CKV_GCP_13:Certificate based authentication irrelevant using Autopilot
+  #checkov:skip=CKV_GCP_24:No privileged workloads on Autopilot, so PSPs irrelevant
   provider = google-beta
 
   name     = var.name
@@ -19,6 +30,10 @@ resource "google_container_cluster" "cluster" {
 
   network    = var.network_id
   subnetwork = var.subnetwork_id
+
+  release_channel {
+    channel = var.release_channel
+  }
 
   ip_allocation_policy {
     cluster_secondary_range_name  = var.cluster_secondary_range_name
