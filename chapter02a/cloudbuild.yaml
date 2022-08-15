@@ -22,11 +22,7 @@ steps:
       echo "Target environment: ${_TARGET_ENV}"
       echo "Also planning environments: ${_PLAN_ENV}"
       envs="$_TARGET_ENV,$_PLAN_ENV"
-      while
-        env=${envs%%,*}
-        envs=${envs#*,}
-        [ "$env" != "$envs" ]
-      do
+      for env in $(echo $envs | tr "," "\n"); do
         if [ ! -z "${env}" ] && [ -d "environments/${env}" ]; then
           echo ""
           echo "*************** TERRAFORM INIT ******************"
