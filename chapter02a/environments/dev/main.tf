@@ -53,7 +53,7 @@ module "network" {
 
 data "http" "myip" {
   url = "https://ipinfo.io/ip"
-}
+} # TODO: work around this in Cloud Build!!!
 
 
 module "cluster" {

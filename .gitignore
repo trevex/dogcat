@@ -11,6 +11,7 @@ node_modules
 # next.js
 .next
 /chapter01/out/
+/chapter02b/web/dist/
 
 # production
 /chapter01/build
