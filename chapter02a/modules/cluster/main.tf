@@ -4,6 +4,7 @@
 #tfsec:ignore:google-gke-enable-network-policy
 #tfsec:ignore:google-gke-node-metadata-security
 #tfsec:ignore:google-gke-use-cluster-labels
+#tfsec:ignore:google-gke-use-service-account
 resource "google_container_cluster" "cluster" {
   #checkov:skip=CKV_GCP_21:We do not use labels in this demo
   #checkov:skip=CKV_GCP_61:We do not use VPC Flow Logs in this demo
