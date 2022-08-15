@@ -50,6 +50,8 @@ steps:
 - id: 'tflint'
   name: 'ghcr.io/terraform-linters/tflint-bundle:v0.39.3.1'
   entrypoint: 'sh'
+  env:
+  - 'TFLINT_LOG=info'
   args:
   - '-c'
   - |
@@ -58,11 +60,12 @@ steps:
       for env in $(echo $envs | tr "," "\n"); do
         if [ ! -z "${env}" ] && [ -d "environments/${env}" ]; then
           echo ""
-          echo "*************** TERRAFORM INIT ******************"
+          echo "******************* TFLINT **********************"
           echo "******* At environment: ${env} ********"
           echo "*************************************************"
           cd "environments/${env}"
-          tflint --loglevel=info --module --enable-plugin=google .
+          tflint -c ../../.tflint.hcl --init . || exit 1
+          tflint -c ../../.tflint.hcl . || exit 1
           cd ../..
         else
           echo ""
@@ -73,7 +76,7 @@ steps:
 - id: 'checkov'
   name: 'bridgecrew/checkov:2.1.125'
   args:
-  - '--directory chapter02a/'
+  - '-d chapter02a/'
 
 # - id: 'tf plan'
 #   name: 'hashicorp/terraform:1.2.5'
