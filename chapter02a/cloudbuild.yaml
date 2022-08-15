@@ -19,17 +19,15 @@ steps:
   - '-c'
   - |
       cd chapter02a
-      echo "Planning environments: ${_PLAN_ENV}"
       echo "Target environment: ${_TARGET_ENV}"
-      envs=$_PLAN_ENV
+      echo "Also planning environments: ${_PLAN_ENV}"
+      envs="$_TARGET_ENV,$_PLAN_ENV"
       while
         env=${envs%%,*}
         envs=${envs#*,}
         [ "$env" != "$envs" ]
       do
-        echo ""
-        echo "******* Checking environment: ${env} *******"
-        if [ -d "environments/${env}" ]; then
+        if [ ! -z "${env}" ] && [ -d "environments/${env}" ]; then
           echo ""
           echo "*************** TERRAFORM INIT ******************"
           echo "******* At environment: ${env} ********"
@@ -37,7 +35,7 @@ steps:
           terraform -chdir="environments/${env}" init -no-color || exit 1
         else
           echo ""
-          echo "******* Not found: ${env} *******"
+          echo "******* Not found (or skipping empty variable): ${env} *******"
         fi
       done
 
