@@ -19,7 +19,7 @@ resource "google_compute_subnetwork" "subnetworks" {
   region   = each.value.region
 
   private_ip_google_access   = true
-  private_ipv6_google_access = true
+  private_ipv6_google_access = "ENABLE_OUTBOUND_VM_ACCESS_TO_GOOGLE"
   ip_cidr_range              = each.value.ip_cidr_range
   purpose                    = "PRIVATE"
 
