@@ -112,18 +112,21 @@ resource "google_service_account" "build" {
   display_name = "Service Account used by Cloud Build to rollout ${each.value}-environment."
 }
 
-resource "google_project_iam_member" "build_act_as" {
-  for_each = local.environments
-  project  = var.project
-  role     = "roles/iam.serviceAccountUser"
-  member   = "serviceAccount:${google_service_account.build[each.value].email}"
-}
-
 resource "google_project_iam_member" "build_logs_writer" {
   for_each = local.environments
   project  = var.project
   role     = "roles/logging.logWriter"
   member   = "serviceAccount:${google_service_account.build[each.value].email}"
+}
+
+resource "google_artifact_registry_repository_iam_member" "build_ar_writer" {
+  for_each = local.environments
+
+  project    = google_artifact_registry_repository.images.project
+  location   = google_artifact_registry_repository.images.location
+  repository = google_artifact_registry_repository.images.name
+  role       = "roles/artifactregistry.writer"
+  member     = "serviceAccount:${google_service_account.build[each.value].email}"
 }
 
 resource "google_project_iam_member" "build_access_project" {
@@ -174,7 +177,7 @@ resource "google_cloudbuild_trigger" "build" {
 
   depends_on = [
     google_project_service.services,
-    google_project_iam_member.build_act_as,
+    google_artifact_registry_repository_iam_member.build_ar_writer,
     google_project_iam_member.build_logs_writer,
     google_project_iam_member.build_access_project,
   ]

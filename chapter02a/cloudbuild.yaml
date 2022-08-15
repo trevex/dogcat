@@ -2,14 +2,16 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 steps:
-- id: 'target env'
+- id: 'env'
   name: 'alpine'
   entrypoint: 'sh'
   args:
   - '-c'
   - |
       echo "***********************"
-      echo "${_TARGET_ENV}"
+      echo "Target: ${_TARGET_ENV}"
+      echo "***********************"
+      echo "Also plans: ${_PLAN_ENV}"
       echo "***********************"
 
 - id: 'tf init'
@@ -19,8 +21,6 @@ steps:
   - '-c'
   - |
       cd chapter02a
-      echo "Target environment: ${_TARGET_ENV}"
-      echo "Also planning environments: ${_PLAN_ENV}"
       envs="$_TARGET_ENV,$_PLAN_ENV"
       for env in $(echo $envs | tr "," "\n"); do
         if [ ! -z "${env}" ] && [ -d "environments/${env}" ]; then
@@ -34,6 +34,46 @@ steps:
           echo "******* Not found (or skipping empty variable): ${env} *******"
         fi
       done
+
+- id: 'tfsec'
+  name: 'aquasec/tfsec-ci:v1.26'
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+      cd chapter02a
+      echo "***********************"
+      echo "Running tfsec for all environments"
+      echo "***********************"
+      tfsec --no-color || exit 1
+
+- id: 'tflint'
+  name: 'ghcr.io/terraform-linters/tflint-bundle:v0.39.3.1'
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+      cd chapter02a
+      envs="$_TARGET_ENV,$_PLAN_ENV"
+      for env in $(echo $envs | tr "," "\n"); do
+        if [ ! -z "${env}" ] && [ -d "environments/${env}" ]; then
+          echo ""
+          echo "*************** TERRAFORM INIT ******************"
+          echo "******* At environment: ${env} ********"
+          echo "*************************************************"
+          cd "environments/${env}"
+          tflint --loglevel=info --module --enable-plugin=google .
+          cd ../..
+        else
+          echo ""
+          echo "******* Not found (or skipping empty variable): ${env} *******"
+        fi
+      done
+
+- id: 'checkov'
+  name: 'bridgecrew/checkov:2.1.125'
+  args:
+  - '--directory chapter02a/'
 
 # - id: 'tf plan'
 #   name: 'hashicorp/terraform:1.2.5'
