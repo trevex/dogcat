@@ -120,9 +120,15 @@ resource "google_project_iam_member" "build_logs_writer" {
   member   = "serviceAccount:${google_service_account.build[each.value].email}"
 }
 
-resource "google_artifact_registry_repository_iam_member" "build_ar_writer" {
+resource "google_storage_bucket_iam_member" "build_state_access" {
   for_each = local.environments
+  bucket   = var.state_bucket_name
+  role     = "roles/storage.admin"
+  member   = "serviceAccount:${google_service_account.build[each.value].email}"
+}
 
+resource "google_artifact_registry_repository_iam_member" "build_ar_writer" {
+  for_each   = local.environments
   project    = google_artifact_registry_repository.images.project
   location   = google_artifact_registry_repository.images.location
   repository = google_artifact_registry_repository.images.name

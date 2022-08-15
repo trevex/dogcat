@@ -17,3 +17,7 @@ variable "source_repository_name" {
 variable "create_source_repository" {
   type = bool
 }
+
+variable "state_bucket_name" {
+  type = string
+}
