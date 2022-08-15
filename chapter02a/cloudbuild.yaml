@@ -82,43 +82,43 @@ steps:
       echo "***********************"
       echo "Running checkov for all environments"
       echo "***********************"
-      checkov -d . || exit 1
+      checkov --quiet -d . || exit 1
 
-# - id: 'tf plan'
-#   name: 'hashicorp/terraform:1.2.5'
-#   entrypoint: 'sh'
-#   args:
-#   - '-c'
-#   - |
-#       if [ -d "environments/$BRANCH_NAME/" ]; then
-#         cd environments/$BRANCH_NAME
-#         terraform plan
-#       else
-#         for dir in environments/*/
-#         do
-#           cd ${dir}
-#           env=${dir%*/}
-#           env=${env#*/}
-#           echo ""
-#           echo "*************** TERRAFOM PLAN ******************"
-#           echo "******* At environment: ${env} ********"
-#           echo "*************************************************"
-#           terraform plan || exit 1
-#           cd ../../
-#         done
-#       fi
+- id: 'tf plan'
+  name: 'hashicorp/terraform:1.2.5'
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+      cd chapter02a
+      envs="$_TARGET_ENV,$_PLAN_ENV"
+      for env in $(echo $envs | tr "," "\n"); do
+        if [ ! -z "${env}" ] && [ -d "environments/${env}" ]; then
+          echo ""
+          echo "*************** TERRAFORM PLAN ******************"
+          echo "******* At environment: ${env} ********"
+          echo "*************************************************"
+          terraform -chdir="environments/${env}" plan -no-color || exit 1
+        else
+          echo ""
+          echo "******* Not found (or skipping empty variable): ${env} *******"
+        fi
+      done
 
-# - id: 'tf apply'
-#   name: 'hashicorp/terraform:1.2.5'
-#   entrypoint: 'sh'
-#   args:
-#   - '-c'
-#   - |
-#       if [ -d "environments/$BRANCH_NAME/" ]; then
-#         cd environments/$BRANCH_NAME
-#         terraform apply -auto-approve
-#       else
-#         echo "***************************** SKIPPING APPLYING *******************************"
-#         echo "Branch '$BRANCH_NAME' does not represent an oficial environment."
-#         echo "*******************************************************************************"
-#       fi
+
+- id: 'tf apply'
+  name: 'hashicorp/terraform:1.2.5'
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+      env="$_TARGET_ENV"
+      if [ ! -z "${env}" ] && [ -d "environments/${env}" ]; then
+        echo "*************** TERRAFORM APPLY ******************"
+        echo "******* At environment: ${env} ********"
+        echo "*************************************************"
+        terraform  -chdir="environments/${env}" apply -auto-approve -no-color || exit 1
+      else
+        echo ""
+        echo "******* Not found (or skipping empty variable): ${env} *******"
+      fi
