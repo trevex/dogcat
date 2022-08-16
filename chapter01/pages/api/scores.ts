@@ -20,7 +20,6 @@ export default async function handler(
             res.status(400).send({ message: 'Required arguments not provided!' });
             return;
         }
-        Date.now()
         recentScore = await Score.create({
             username,
             score,

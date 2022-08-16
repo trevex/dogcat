@@ -63,6 +63,7 @@ func NewServerCmd() *cobra.Command {
 			handler := func(p *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) {
 				return func(w http.ResponseWriter, r *http.Request) {
 					r.Host = remote.Host
+					log.Info().Msg("WTF")
 					p.ServeHTTP(w, r)
 				}
 			}
@@ -95,7 +96,7 @@ func NewServerCmd() *cobra.Command {
 		})))
 
 		// We add our fileServer (not using r.StaticFS to make it easy to drop in proxy)
-		r.Any("/", gin.WrapH(fileServer))
+		r.NoRoute(gin.WrapH(fileServer))
 		// Let's also add our API (see api.go for details)
 		AddAPIRoutes(e, r)
 

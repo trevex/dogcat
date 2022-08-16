@@ -12,6 +12,7 @@ require (
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.8.0
+	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	modernc.org/sqlite v1.18.1
 )
 
