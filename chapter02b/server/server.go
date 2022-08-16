@@ -29,13 +29,14 @@ func NewServerCmd() *cobra.Command {
 
 	var (
 		isDev   bool
-		dialect string
+		driver  string
 		connStr string
 	)
 
 	flags := cmd.Flags()
 	flags.BoolVar(&isDev, "dev", false, "Ignores settings and starts with in-memory database")
-	// TODO: driver/dialect and connStr flags
+	flags.StringVarP(&driver, "driver", "d", "", "Database driver to use for the connection string")
+	flags.StringVarP(&connStr, "conn-str", "c", "", "Connection string for the database connection")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
@@ -55,7 +56,7 @@ func NewServerCmd() *cobra.Command {
 			zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
 			// Let's use SQLite
-			dialect = ent.SQLite
+			driver = ent.SQLite
 			connStr = ent.SQLLiteInMemoryConnStr
 
 			// Instead of the file-server we want to proxy to frontend dev-server
@@ -72,7 +73,7 @@ func NewServerCmd() *cobra.Command {
 		}
 
 		// Open database connection
-		e, err := ent.Open(ctx, dialect, connStr)
+		e, err := ent.Open(ctx, driver, connStr)
 		if err != nil {
 			return err
 		}
