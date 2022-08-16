@@ -25,6 +25,7 @@ resource "google_project_service" "services" {
     "cloudbuild.googleapis.com",
     "artifactregistry.googleapis.com",
     "sourcerepo.googleapis.com",
+    "clouddeploy.googleapis.com",
   ])
   project = var.project
   service = each.value
@@ -46,13 +47,17 @@ resource "google_artifact_registry_repository" "images" {
 
 # And we give all our compute in cluster projects reader access to container-images
 
+locals {
+  cluster_projects = toset([for c in var.clusters : split("/", c)[1]])
+}
+
 data "google_project" "cluster_project" {
-  for_each   = var.cluster_projects
+  for_each   = local.cluster_projects
   project_id = each.value
 }
 
 resource "google_artifact_registry_repository_iam_member" "compute_ar_reader" {
-  for_each = var.cluster_projects
+  for_each = local.cluster_projects
 
   project    = google_artifact_registry_repository.images.project
   location   = google_artifact_registry_repository.images.location
@@ -91,9 +96,9 @@ locals {
 locals {
   projects_with_environments = concat(
     # We go over all projects and associate them to an environment based on their suffix
-    [for p in var.cluster_projects : { project = p, env = "dev" } if length(regexall(".*-dev$", p)) > 0],
-    [for p in var.cluster_projects : { project = p, env = "stage" } if length(regexall(".*-stage$", p)) > 0],
-    [for p in var.cluster_projects : { project = p, env = "prod" } if length(regexall(".*-prod$", p)) > 0],
+    [for p in local.cluster_projects : { project = p, env = "dev" } if length(regexall(".*-dev$", p)) > 0],
+    [for p in local.cluster_projects : { project = p, env = "stage" } if length(regexall(".*-stage$", p)) > 0],
+    [for p in local.cluster_projects : { project = p, env = "prod" } if length(regexall(".*-prod$", p)) > 0],
     [{ project = var.project, env = "shared" }] # we add the shared environment manually
   )
   environments = toset(["dev", "stage", "prod", "shared"])
@@ -189,4 +194,69 @@ resource "google_cloudbuild_trigger" "build" {
     google_project_iam_member.build_logs_writer,
     google_project_iam_member.build_access_project,
   ]
+}
+
+
+# For developer teams we pre-create targets corresponding to our GKE clusters
+# and assign ServiceAccounts with access to them.
+locals {
+  # Format: "projects/my-project-name/locations/us-west1/clusters/example-cluster-name"
+  cluster_splits = [for c in var.clusters : split("/", c)]
+  targets = { for s in local.cluster_splits : s[5] => {
+    cluster_id = join("/", s)
+    project    = s[1]
+    location   = s[3]
+    name       = s[5]
+    # Environment is extracted from cluster name
+    env = regexall(".*(dev|stage|prod).*", s[5])[0][0]
+  } }
+
+}
+
+resource "google_storage_bucket" "artifacts" {
+  name                        = "${var.project}-deploy-artifacts"
+  location                    = "EU"
+  uniform_bucket_level_access = true
+}
+
+resource "google_service_account" "target_deployers" {
+  for_each     = local.targets
+  account_id   = "target-${each.key}"
+  display_name = "Use to deploy release to target ${each.key}"
+}
+
+resource "google_storage_bucket_iam_member" "target_deployers_artifacts_access" {
+  for_each = local.targets
+  bucket   = google_storage_bucket.artifacts.id
+  role     = "roles/storage.admin"
+  member   = "serviceAccount:${google_service_account.target_deployers[each.key].email}"
+}
+
+resource "google_project_iam_member" "target_deployers_gke_access" {
+  for_each = local.targets
+  project  = each.value.project
+  role     = "roles/container.developer"
+  member   = "serviceAccount:${google_service_account.target_deployers[each.key].email}"
+}
+
+resource "google_clouddeploy_target" "targets" {
+  for_each = local.targets
+
+  location         = each.value.location
+  name             = each.value.name
+  require_approval = each.value.env == "prod" ? true : false
+  description      = "Cluster ${each.value.name} in project ${each.value.project}"
+  labels = {
+    env = each.value.env
+  }
+
+  gke {
+    cluster = each.value.cluster_id
+  }
+
+  execution_configs {
+    artifact_storage = "${google_storage_bucket.artifacts.url}/${each.value.env}/"
+    service_account  = google_service_account.target_deployers[each.key].email
+    usages           = ["RENDER", "DEPLOY"]
+  }
 }

@@ -41,6 +41,8 @@ https://forsetisecurity.org/
 https://cloudcustodian.io/
 https://www.cloudquery.io/
 
+Daniel: policy troubleshooter, asset inventory, iam recommender
+
 # FUTURE:
 
  alternative to chapter02b https://cloud.google.com/kubernetes-engine/docs/tutorials/gitops-cloud-build
