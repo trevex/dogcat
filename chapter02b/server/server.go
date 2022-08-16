@@ -102,7 +102,7 @@ func NewServerCmd() *cobra.Command {
 		AddAPIRoutes(e, r)
 
 		// Start HTTP server at :4000.
-		log.Info().Msg("Starting HTTP server on http://localhost:4000...")
+		log.Info().Msg("Starting HTTP server on :4000 (use http://localhost:4000 locally)...")
 		srv := &http.Server{
 			Addr:    ":4000",
 			Handler: r,

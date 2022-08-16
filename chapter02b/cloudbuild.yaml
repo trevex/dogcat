@@ -1,0 +1,5 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: [ 'build', '-t', 'europe-west1-docker.pkg.dev/nvoss-dogcat-chapter-02-shared/images/dogcat:$SHORT_SHA', './chapter02b' ]
+images:
+- 'europe-west1-docker.pkg.dev/nvoss-dogcat-chapter-02-shared/images/dogcat:$SHORT_SHA'

@@ -31,7 +31,15 @@ main => straight to stage, approval for prod and shared (mention no dev setup fo
 use gates for shared and prod: https://cloud.google.com/build/docs/securing-builds/gate-builds-on-approval#:~:text=Approving%20builds,-Console%20gcloud&text=Open%20the%20Cloud%20Build%20Dashboard%20page%20in%20the%20Google%20Cloud%20console.&text=If%20you%20have%20builds%20to,of%20builds%20awaiting%20your%20approval.
 
 
+TODO https://cloud.google.com/anthos-config-management/docs/concepts/policy-controller
 
+# Retro:
+
+Team is using a very liberal approach as they do not believe in gatekeeping, but have yet to implement some policing and auditing outside of GKE.
+They are planning to adopt a tool to help here and are currently looking into some OSS:
+https://forsetisecurity.org/
+https://cloudcustodian.io/
+https://www.cloudquery.io/
 
 # FUTURE:
 
