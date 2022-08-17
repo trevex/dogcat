@@ -20,12 +20,16 @@ provider "google-beta" {
 
 resource "google_project_service" "services" {
   for_each = toset([
+    "anthos.googleapis.com",
     "cloudresourcemanager.googleapis.com",
+    "compute.googleapis.com",
+    "container.googleapis.com",
     "iam.googleapis.com",
     "cloudbuild.googleapis.com",
     "artifactregistry.googleapis.com",
     "sourcerepo.googleapis.com",
     "clouddeploy.googleapis.com",
+    "gkehub.googleapis.com",
   ])
   project = var.project
   service = each.value
@@ -259,4 +263,42 @@ resource "google_clouddeploy_target" "targets" {
     service_account  = google_service_account.target_deployers[each.key].email
     usages           = ["RENDER", "DEPLOY"]
   }
+
+  depends_on = [google_project_service.services]
 }
+
+
+# Let's register all clusters to our fleet
+
+data "google_project" "fleet_project" {
+  project_id = var.project
+}
+
+resource "google_project_iam_member" "membership_access" {
+  for_each = toset([for t in local.targets : t.project])
+  project  = each.value
+  role     = "roles/gkehub.serviceAgent"
+  member   = "serviceAccount:service-${data.google_project.fleet_project.number}@gcp-sa-gkehub.iam.gserviceaccount.com"
+
+  depends_on = [google_project_service.services]
+}
+
+resource "google_gke_hub_membership" "membership" {
+  for_each = local.targets
+
+  membership_id = each.key
+  endpoint {
+    gke_cluster {
+      resource_link = "//container.googleapis.com/${each.value.cluster_id}"
+    }
+  }
+
+  depends_on = [
+    google_project_iam_member.membership_access,
+    google_project_service.services,
+  ]
+}
+
+# TODO: enable features, e.g. policy controller
+#       https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/gke_hub_feature_membership
+

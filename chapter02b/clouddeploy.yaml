@@ -1,0 +1,9 @@
+apiVersion: deploy.cloud.google.com/v1beta1
+kind: DeliveryPipeline
+metadata:
+ name: dogcat
+description: Main pipeline to deploy DogCat-game including GCP resources
+serialPipeline:
+ stages:
+ - targetId: dev-cluster
+   profiles: [dev]

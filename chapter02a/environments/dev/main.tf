@@ -3,6 +3,13 @@ terraform {
     bucket = "nvoss-dogcat-chapter-02-tf-state"
     prefix = "terraform/dev"
   }
+
+  required_providers {
+    kubectl = {
+      source  = "gavinbunney/kubectl"
+      version = ">= 1.14.0"
+    }
+  }
 }
 
 provider "google" {
@@ -69,4 +76,18 @@ module "cluster" {
   }
 
   depends_on = [google_project_service.services]
+}
+
+# Let's setup the kubernetes provider based on our cluster
+data "google_client_config" "cluster" {}
+
+provider "kubectl" {
+  host                   = module.cluster.host
+  token                  = data.google_client_config.cluster.access_token
+  cluster_ca_certificate = module.cluster.cluster_ca_certificate
+  load_config_file       = false
+}
+
+module "configconnector" {
+  source = "../../modules//configconnector"
 }

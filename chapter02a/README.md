@@ -43,6 +43,9 @@ https://www.cloudquery.io/
 
 Daniel: policy troubleshooter, asset inventory, iam recommender
 
+Team pushed terraform to its max and feels like they have to introduce new tool, e.g. local-exec not optimal
+Terraform not using git refs for modules ==> split?
+
 # FUTURE:
 
  alternative to chapter02b https://cloud.google.com/kubernetes-engine/docs/tutorials/gitops-cloud-build
