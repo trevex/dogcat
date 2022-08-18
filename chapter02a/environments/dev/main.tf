@@ -42,7 +42,7 @@ module "network" {
     name_affix    = "main" # full name will be `${name}-${name_affix}-${region}`
     ip_cidr_range = "10.0.0.0/20"
     region        = var.region
-    secondary_ip_range = [{
+    secondary_ip_range = [{ # Use larger ranges in production!
       range_name    = "pods"
       ip_cidr_range = "10.0.32.0/19"
       }, {

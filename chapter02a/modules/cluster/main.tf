@@ -34,6 +34,11 @@ resource "google_container_cluster" "cluster" {
   #checkov:skip=CKV_GCP_66:TODO let's enable Binary Auth in the future!
   #checkov:skip=CKV_GCP_65:Well, to simplify the demo we do not use Google Groups in GKE
   #checkov:skip=CKV_GCP_24:We do not use PSPs in this demo
+  #checkov:skip=CKV_GCP_19:False positive, basic auth disabled by default.
+  #checkov:skip=CKV_GCP_13:False positive, client cert disabled by default.
+  #checkov:skip=CKV_GCP_12:False positive, network policy available on DPV2 by default.
+  #checkov:skip=CKV_GCP_67:False positive, default node pool is not used.
+  #checkov:skip=CKV_GCP_69:False positive, default node pool is not used.
   provider = google-beta
 
   name     = var.name
