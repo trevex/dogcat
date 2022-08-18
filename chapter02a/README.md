@@ -33,6 +33,8 @@ use gates for shared and prod: https://cloud.google.com/build/docs/securing-buil
 
 TODO https://cloud.google.com/anthos-config-management/docs/concepts/policy-controller
 
+TODO split up code to make it more readable
+
 # Retro:
 
 Team is using a very liberal approach as they do not believe in gatekeeping, but have yet to implement some policing and auditing outside of GKE.

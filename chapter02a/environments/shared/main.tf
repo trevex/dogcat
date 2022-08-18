@@ -52,22 +52,33 @@ resource "google_artifact_registry_repository" "images" {
 # And we give all our compute in cluster projects reader access to container-images
 
 locals {
-  cluster_projects = toset([for c in var.clusters : split("/", c)[1]])
+  # Format: "projects/my-project-name/locations/us-west1/clusters/example-cluster-name"
+  cluster_splits = [for c in var.clusters : split("/", c)]
+  clusters = { for s in local.cluster_splits : s[5] => {
+    cluster_id = join("/", s)
+    project    = s[1]
+    location   = s[3]
+    name       = s[5]
+    # Environment is extracted from cluster name
+    env = regexall(".*(dev|stage|prod).*", s[5])[0][0]
+  } }
 }
 
 data "google_project" "cluster_project" {
-  for_each   = local.cluster_projects
-  project_id = each.value
+  for_each   = local.clusters
+  project_id = each.value.project
 }
 
 resource "google_artifact_registry_repository_iam_member" "compute_ar_reader" {
-  for_each = local.cluster_projects
+  for_each = local.clusters
 
   project    = google_artifact_registry_repository.images.project
   location   = google_artifact_registry_repository.images.location
   repository = google_artifact_registry_repository.images.name
   role       = "roles/artifactregistry.reader"
-  member     = "serviceAccount:${data.google_project.cluster_project[each.key].number}-compute@developer.gserviceaccount.com"
+  # TODO: This is a rather implicit contract to how the cluster-module works.
+  #       Most likely we should revisit this in the future and make it explicit using a variable.
+  member = "serviceAccount:${each.value.name}@${each.value.project}.iam.gserviceaccount.com"
 }
 
 
@@ -99,10 +110,8 @@ locals {
 
 locals {
   projects_with_environments = concat(
-    # We go over all projects and associate them to an environment based on their suffix
-    [for p in local.cluster_projects : { project = p, env = "dev" } if length(regexall(".*-dev$", p)) > 0],
-    [for p in local.cluster_projects : { project = p, env = "stage" } if length(regexall(".*-stage$", p)) > 0],
-    [for p in local.cluster_projects : { project = p, env = "prod" } if length(regexall(".*-prod$", p)) > 0],
+    # We go over all clusters to retrieve our list of projects and environments
+    [for c in local.clusters : { project = c.project, env = c.env }],
     [{ project = var.project, env = "shared" }] # we add the shared environment manually
   )
   environments = toset(["dev", "stage", "prod", "shared"])
@@ -203,19 +212,7 @@ resource "google_cloudbuild_trigger" "build" {
 
 # For developer teams we pre-create targets corresponding to our GKE clusters
 # and assign ServiceAccounts with access to them.
-locals {
-  # Format: "projects/my-project-name/locations/us-west1/clusters/example-cluster-name"
-  cluster_splits = [for c in var.clusters : split("/", c)]
-  targets = { for s in local.cluster_splits : s[5] => {
-    cluster_id = join("/", s)
-    project    = s[1]
-    location   = s[3]
-    name       = s[5]
-    # Environment is extracted from cluster name
-    env = regexall(".*(dev|stage|prod).*", s[5])[0][0]
-  } }
 
-}
 
 resource "google_storage_bucket" "artifacts" {
   #checkov:skip=CKV_GCP_62:We do not want to log access
@@ -226,27 +223,27 @@ resource "google_storage_bucket" "artifacts" {
 }
 
 resource "google_service_account" "target_deployers" {
-  for_each     = local.targets
+  for_each     = local.clusters
   account_id   = "target-${each.key}"
   display_name = "Use to deploy release to target ${each.key}"
 }
 
 resource "google_storage_bucket_iam_member" "target_deployers_artifacts_access" {
-  for_each = local.targets
+  for_each = local.clusters
   bucket   = google_storage_bucket.artifacts.id
   role     = "roles/storage.admin"
   member   = "serviceAccount:${google_service_account.target_deployers[each.key].email}"
 }
 
 resource "google_project_iam_member" "target_deployers_gke_access" {
-  for_each = local.targets
+  for_each = local.clusters
   project  = each.value.project
   role     = "roles/container.developer"
   member   = "serviceAccount:${google_service_account.target_deployers[each.key].email}"
 }
 
 resource "google_clouddeploy_target" "targets" {
-  for_each = local.targets
+  for_each = local.clusters
 
   location         = each.value.location
   name             = each.value.name
@@ -277,7 +274,7 @@ data "google_project" "fleet_project" {
 }
 
 resource "google_project_iam_member" "membership_access" {
-  for_each = toset([for t in local.targets : t.project])
+  for_each = toset([for t in local.clusters : t.project])
   project  = each.value
   role     = "roles/gkehub.serviceAgent"
   member   = "serviceAccount:service-${data.google_project.fleet_project.number}@gcp-sa-gkehub.iam.gserviceaccount.com"
@@ -290,7 +287,7 @@ resource "google_project_iam_member" "membership_access" {
 #       For the purpose of this demo, we are not interested in the features
 #       of the connect-agent.
 resource "google_gke_hub_membership" "membership" {
-  for_each = local.targets
+  for_each = local.clusters
 
   membership_id = each.key
   endpoint {
