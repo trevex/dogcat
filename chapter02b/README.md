@@ -18,6 +18,20 @@ Waiting for the operation on resource projects/nvoss-dogcat-chapter-02-shared/lo
 Created Cloud Deploy resource: projects/nvoss-dogcat-chapter-02-shared/locations/europe-west1/deliveryPipelines/dogcat.
 ```
 
+serviceaccounts created by platform team to use with cloud build
+
+```
+gcloud beta builds triggers create cloud-source-repositories \
+  --repo dogcat \
+  --branch-pattern="^main$" \
+  --build-config="chapter02b/cloudbuild.yaml" \
+  --description="Build dogcat and deploy to dev from main-branch." \
+  --name dogcat-dev \
+  --service-account="projects/nvoss-dogcat-chapter-02-shared/serviceAccounts/build-dev@nvoss-dogcat-chapter-02-shared.iam.gserviceaccount.com"
+```
+https://cloud.google.com/sdk/gcloud/reference/beta/builds/triggers/create/cloud-source-repositories
+
+
 
 # Git flow
 
