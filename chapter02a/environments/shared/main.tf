@@ -284,6 +284,10 @@ resource "google_project_iam_member" "membership_access" {
   depends_on = [google_project_service.services]
 }
 
+# NOTE: This will as of today not install the connect-agent!
+#       You will have to re-register the cluster through the CLI instead.
+#       For the purpose of this demo, we are not interested in the features
+#       of the connect-agent.
 resource "google_gke_hub_membership" "membership" {
   for_each = local.targets
 
@@ -292,6 +296,9 @@ resource "google_gke_hub_membership" "membership" {
     gke_cluster {
       resource_link = "//container.googleapis.com/${each.value.cluster_id}"
     }
+  }
+  authority {
+    issuer = "https://container.googleapis.com/v1/${each.value.cluster_id}"
   }
 
   depends_on = [

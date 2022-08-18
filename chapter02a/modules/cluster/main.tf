@@ -46,7 +46,7 @@ resource "google_container_cluster" "cluster" {
 
   network           = var.network_id
   subnetwork        = var.subnetwork_id
-  datapath_provider = "ADVANCED_DATAPATH"
+  datapath_provider = "ADVANCED_DATAPATH" # We use Dataplane V2
 
   resource_labels = { # The var.name should contain the environment in its name, if not we error
     "managed-by" = "tf"
@@ -102,6 +102,12 @@ resource "google_container_cluster" "cluster" {
       enable_secure_boot          = true
       enable_integrity_monitoring = true
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      node_config # required due to Argolis workaround
+    ]
   }
 
   timeouts {
@@ -203,3 +209,4 @@ resource "google_compute_firewall" "admission" {
   source_ranges = [google_container_cluster.cluster.private_cluster_config[0].master_ipv4_cidr_block]
   target_tags   = [var.name]
 }
+

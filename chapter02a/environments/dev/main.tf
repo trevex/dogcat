@@ -79,3 +79,21 @@ module "cluster" {
   depends_on = [google_project_service.services]
 }
 
+
+data "google_client_config" "cluster" {}
+
+provider "kubectl" {
+  host                   = module.cluster.host
+  token                  = data.google_client_config.cluster.access_token
+  cluster_ca_certificate = module.cluster.cluster_ca_certificate
+  load_config_file       = false
+}
+
+module "configconnector" {
+  source = "../../modules//configconnector"
+
+  project = var.project
+
+  depends_on = [module.cluster]
+}
+
