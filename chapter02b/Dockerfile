@@ -5,7 +5,7 @@ WORKDIR /src
 
 # Let's install all node-modules
 RUN mkdir web
-COPY ./web/package.json ./web/yarn.lock ./web
+COPY ./web/package.json ./web/yarn.lock ./web/
 RUN yarn --cwd ./web install
 
 # Let's preload all go-modules
