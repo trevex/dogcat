@@ -67,6 +67,7 @@ module "cluster" {
   source = "../../modules//cluster"
 
   name                   = "dev-cluster"
+  project                = var.project
   region                 = var.region
   network_id             = module.network.id
   subnetwork_id          = module.network.subnetworks["dev-network-main-europe-west1"].id
@@ -78,16 +79,3 @@ module "cluster" {
   depends_on = [google_project_service.services]
 }
 
-# Let's setup the kubernetes provider based on our cluster
-data "google_client_config" "cluster" {}
-
-provider "kubectl" {
-  host                   = module.cluster.host
-  token                  = data.google_client_config.cluster.access_token
-  cluster_ca_certificate = module.cluster.cluster_ca_certificate
-  load_config_file       = false
-}
-
-module "configconnector" {
-  source = "../../modules//configconnector"
-}

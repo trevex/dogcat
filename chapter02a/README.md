@@ -43,8 +43,9 @@ https://www.cloudquery.io/
 
 Daniel: policy troubleshooter, asset inventory, iam recommender
 
-Team pushed terraform to its max and feels like they have to introduce new tool, e.g. local-exec not optimal
+Team pushed terraform to its max and feels like they have to introduce new tool, e.g. kubectl not optimal
 Terraform not using git refs for modules ==> split?
+Config Controller VS Config Connector
 
 # FUTURE:
 
