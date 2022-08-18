@@ -219,6 +219,7 @@ locals {
 
 resource "google_storage_bucket" "artifacts" {
   #checkov:skip=CKV_GCP_62:We do not want to log access
+  #checkov:skip=CKV_GCP_78:We do not need versioning either
   name                        = "${var.project}-deploy-artifacts"
   location                    = "EU"
   uniform_bucket_level_access = true
