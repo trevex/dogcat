@@ -50,6 +50,9 @@
             tfsec
             checkov
             tflint
+            kubectl
+            kubernetes-helm
+            skaffold
           ];
         };
       }

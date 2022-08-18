@@ -126,43 +126,50 @@ locals {
   }
 }
 
-resource "google_service_account" "build" {
+resource "google_service_account" "build_tf" {
   for_each     = local.environments
   account_id   = "build-tf-${each.value}"
-  display_name = "Service Account used by Cloud Build to rollout ${each.value}-environment."
+  display_name = "Service Account used by Cloud Build to rollout Terraform-code to ${each.value}-environment."
 }
 
-resource "google_project_iam_member" "build_logs_writer" {
+resource "google_project_iam_member" "build_tf_logs_writer" {
   for_each = local.environments
   project  = var.project
   role     = "roles/logging.logWriter"
-  member   = "serviceAccount:${google_service_account.build[each.value].email}"
+  member   = "serviceAccount:${google_service_account.build_tf[each.value].email}"
 }
 
-resource "google_storage_bucket_iam_member" "build_state_access" {
+resource "google_storage_bucket_iam_member" "build_tf_state_access" {
   for_each = local.environments
   bucket   = var.state_bucket_name
   role     = "roles/storage.admin"
-  member   = "serviceAccount:${google_service_account.build[each.value].email}"
+  member   = "serviceAccount:${google_service_account.build_tf[each.value].email}"
 }
 
-resource "google_artifact_registry_repository_iam_member" "build_ar_writer" {
+resource "google_artifact_registry_repository_iam_member" "build_tf_ar_writer" {
   for_each   = local.environments
   project    = google_artifact_registry_repository.images.project
   location   = google_artifact_registry_repository.images.location
   repository = google_artifact_registry_repository.images.name
   role       = "roles/artifactregistry.writer"
-  member     = "serviceAccount:${google_service_account.build[each.value].email}"
+  member     = "serviceAccount:${google_service_account.build_tf[each.value].email}"
 }
 
-resource "google_project_iam_member" "build_access_project" {
+resource "google_project_iam_member" "build_tf_access_project" {
   for_each = local.permission_mappings
   project  = each.value.to_project
   role     = each.value.to_env == each.value.from_env ? "roles/editor" : "roles/viewer"
-  member   = "serviceAccount:${google_service_account.build[each.value.from_env].email}"
+  member   = "serviceAccount:${google_service_account.build_tf[each.value.from_env].email}"
 }
 
-resource "google_cloudbuild_trigger" "build" {
+resource "google_project_iam_member" "build_tf_iam_reviewer" {
+  for_each = local.permission_mappings
+  project  = each.value.to_project
+  role     = "roles/iam.securityReviewer"
+  member   = "serviceAccount:${google_service_account.build_tf[each.value.from_env].email}"
+}
+
+resource "google_cloudbuild_trigger" "build_tf" {
   for_each = {
     "dev" = {
       branch_name       = "develop"
@@ -185,7 +192,7 @@ resource "google_cloudbuild_trigger" "build" {
   }
 
   name            = "build-tf-${each.key}"
-  service_account = google_service_account.build[each.key].id
+  service_account = google_service_account.build_tf[each.key].id
   filename        = "chapter02a/cloudbuild.yaml"
   substitutions = {
     _TARGET_ENV = each.key
@@ -203,9 +210,10 @@ resource "google_cloudbuild_trigger" "build" {
 
   depends_on = [
     google_project_service.services,
-    google_artifact_registry_repository_iam_member.build_ar_writer,
-    google_project_iam_member.build_logs_writer,
-    google_project_iam_member.build_access_project,
+    google_artifact_registry_repository_iam_member.build_tf_ar_writer,
+    google_project_iam_member.build_tf_logs_writer,
+    google_project_iam_member.build_tf_access_project,
+    google_project_iam_member.build_tf_iam_reviewer,
   ]
 }
 
@@ -264,6 +272,39 @@ resource "google_clouddeploy_target" "targets" {
   }
 
   depends_on = [google_project_service.services]
+}
+
+
+# Developers also need a set of ServiceAccounts to use for Cloud Build, so we
+# administer those as well
+
+resource "google_service_account" "build" {
+  for_each     = local.environments
+  account_id   = "build-${each.value}"
+  display_name = "Service Account used by Cloud Build to rollout ${each.value}-environment."
+}
+
+resource "google_project_iam_member" "build_logs_writer" {
+  for_each = local.environments
+  project  = var.project
+  role     = "roles/logging.logWriter"
+  member   = "serviceAccount:${google_service_account.build[each.value].email}"
+}
+
+resource "google_artifact_registry_repository_iam_member" "build_ar_writer" {
+  for_each   = local.environments
+  project    = google_artifact_registry_repository.images.project
+  location   = google_artifact_registry_repository.images.location
+  repository = google_artifact_registry_repository.images.name
+  role       = "roles/artifactregistry.writer"
+  member     = "serviceAccount:${google_service_account.build[each.value].email}"
+}
+
+resource "google_project_iam_member" "build_cluster_access" {
+  for_each = local.permission_mappings
+  project  = each.value.to_project
+  role     = each.value.to_env == each.value.from_env ? "roles/container.developer" : "roles/container.viewer"
+  member   = "serviceAccount:${google_service_account.build[each.value.from_env].email}"
 }
 
 

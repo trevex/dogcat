@@ -23,5 +23,6 @@ Created Cloud Deploy resource: projects/nvoss-dogcat-chapter-02-shared/locations
 
 Slightly different: Deploy from main to dev, tags with rc to stage, semver without suffix to prod (but approval)
 
-https://www.googleapis.com/download/storage/v1/b/configconnector-operator/o/1.91.0%2Frelease-bundle.tar.gz?generation=1659639822503508&alt=media
-https://www.googleapis.com/download/storage/v1/b/configconnector-oper:ator/o/1.91.0%2Frelease-bundle.tar.gz?generation=1659639822503508&alt=media
+
+
+
