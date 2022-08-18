@@ -167,6 +167,7 @@ resource "google_project_iam_member" "build_tf_iam_reviewer" {
   project  = each.value.to_project
   role     = "roles/iam.securityReviewer"
   member   = "serviceAccount:${google_service_account.build_tf[each.value.from_env].email}"
+
 }
 
 resource "google_cloudbuild_trigger" "build_tf" {
@@ -288,6 +289,13 @@ resource "google_project_iam_member" "build_logs_writer" {
   for_each = local.environments
   project  = var.project
   role     = "roles/logging.logWriter"
+  member   = "serviceAccount:${google_service_account.build[each.value].email}"
+}
+
+resource "google_project_iam_member" "build_shared_viewer" {
+  for_each = local.environments
+  project  = var.project
+  role     = "roles/viewer"
   member   = "serviceAccount:${google_service_account.build[each.value].email}"
 }
 
