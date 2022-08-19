@@ -244,6 +244,13 @@ resource "google_storage_bucket_iam_member" "target_deployers_artifacts_access" 
   member   = "serviceAccount:${google_service_account.target_deployers[each.key].email}"
 }
 
+resource "google_project_iam_member" "target_deployers_logs_writer" {
+  for_each = local.clusters
+  project  = var.project
+  role     = "roles/logging.logWriter"
+  member   = "serviceAccount:${google_service_account.target_deployers[each.key].email}"
+}
+
 resource "google_project_iam_member" "target_deployers_gke_access" {
   for_each = local.clusters
   project  = each.value.project
@@ -267,7 +274,7 @@ resource "google_clouddeploy_target" "targets" {
   }
 
   execution_configs {
-    artifact_storage = "${google_storage_bucket.artifacts.url}/${each.value.env}/"
+    artifact_storage = "${google_storage_bucket.artifacts.url}/deploy"
     service_account  = google_service_account.target_deployers[each.key].email
     usages           = ["RENDER", "DEPLOY"]
   }
@@ -296,6 +303,13 @@ resource "google_project_iam_member" "build_shared_viewer" {
   for_each = local.environments
   project  = var.project
   role     = "roles/viewer"
+  member   = "serviceAccount:${google_service_account.build[each.value].email}"
+}
+
+resource "google_storage_bucket_iam_member" "build_deploy_artifacts_access" {
+  for_each = local.environments
+  bucket   = google_storage_bucket.artifacts.id
+  role     = "roles/storage.admin"
   member   = "serviceAccount:${google_service_account.build[each.value].email}"
 }
 

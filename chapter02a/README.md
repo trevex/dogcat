@@ -49,6 +49,8 @@ Team pushed terraform to its max and feels like they have to introduce new tool,
 Terraform not using git refs for modules ==> split?
 Config Controller VS Config Connector
 
+Kpt and backstage UI mention looks promising
+
 # FUTURE:
 
  alternative to chapter02b https://cloud.google.com/kubernetes-engine/docs/tutorials/gitops-cloud-build

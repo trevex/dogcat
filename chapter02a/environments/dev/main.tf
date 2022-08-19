@@ -58,11 +58,6 @@ module "network" {
 
 # Create GKE Autopilot cluster
 
-data "http" "myip" {
-  url = "https://ipinfo.io/ip"
-} # TODO: work around this in Cloud Build!!!
-
-
 module "cluster" {
   source = "../../modules//cluster"
 
@@ -72,9 +67,6 @@ module "cluster" {
   network_id             = module.network.id
   subnetwork_id          = module.network.subnetworks["dev-network-main-europe-west1"].id
   master_ipv4_cidr_block = "172.16.0.0/28"
-  master_authorized_networks_config = {
-    "My IP" = "${chomp(data.http.myip.body)}/32"
-  }
 
   depends_on = [google_project_service.services]
 }

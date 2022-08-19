@@ -74,16 +74,6 @@ resource "google_container_cluster" "cluster" {
     }
   }
 
-  master_authorized_networks_config {
-    dynamic "cidr_blocks" {
-      for_each = var.master_authorized_networks_config
-      content {
-        display_name = cidr_blocks.key
-        cidr_block   = cidr_blocks.value
-      }
-    }
-  }
-
   # We use workload identity
   workload_identity_config {
     workload_pool = "${var.project}.svc.id.goog"
