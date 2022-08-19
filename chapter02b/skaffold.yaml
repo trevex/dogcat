@@ -1,0 +1,8 @@
+apiVersion: skaffold/v2beta26
+kind: Config
+profiles:
+  - name: dev
+    deploy:
+      kustomize:
+        paths:
+          - ./kubernetes/dev
