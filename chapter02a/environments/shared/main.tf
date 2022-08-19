@@ -306,13 +306,6 @@ resource "google_project_iam_member" "build_shared_viewer" {
   member   = "serviceAccount:${google_service_account.build[each.value].email}"
 }
 
-resource "google_project_iam_member" "build_deploy_releaser" {
-  for_each = local.environments
-  project  = var.project
-  role     = "roles/clouddeploy.releaser"
-  member   = "serviceAccount:${google_service_account.build[each.value].email}"
-}
-
 resource "google_storage_bucket_iam_member" "build_deploy_artifacts_access" {
   for_each = local.environments
   bucket   = google_storage_bucket.artifacts.id
@@ -334,6 +327,22 @@ resource "google_project_iam_member" "build_cluster_access" {
   project  = each.value.to_project
   role     = each.value.to_env == each.value.from_env ? "roles/container.developer" : "roles/container.viewer"
   member   = "serviceAccount:${google_service_account.build[each.value.from_env].email}"
+}
+
+# To be able to create releases we need to be able to create them but also act
+# as the relevant service account
+resource "google_project_iam_member" "build_deploy_releaser" {
+  for_each = local.environments
+  project  = var.project
+  role     = "roles/clouddeploy.releaser"
+  member   = "serviceAccount:${google_service_account.build[each.value].email}"
+}
+
+resource "google_service_account_iam_member" "build_act_as_deployer" {
+  for_each           = local.clusters
+  service_account_id = google_service_account.target_deployers[each.key].id
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.build[each.value.env].email}"
 }
 
 
