@@ -27,8 +27,9 @@ resource "google_project_iam_member" "cluster_metadata_writer" {
   member  = "serviceAccount:${google_service_account.cluster.email}"
 }
 
-#tfsec:ignore:google-gke-enable-network-policy We use Dataplane V2 with NPs by default
-#tfsec:ignore:google-gke-enforce-pod-security-policy We intentionally do not use PSPs
+#tfsec:ignore:google-gke-enable-network-policy We use Dataplane V2 with NPs by default.
+#tfsec:ignore:google-gke-enforce-pod-security-policy We intentionally do not use PSPs.
+#tfsec:ignore:google-gke-enable-master-networks Keeping setup simple, see retro for additional details.
 resource "google_container_cluster" "cluster" {
   #checkov:skip=CKV_GCP_61:We do not use VPC Flow Logs in this demo
   #checkov:skip=CKV_GCP_66:TODO let's enable Binary Auth in the future!
