@@ -2,3 +2,17 @@ resources:
 - ../base
 namePrefix: dev-
 namespace: dogcat
+
+transformers:
+  - |-
+    apiVersion: builtin
+    kind: LabelTransformer
+    metadata:
+      name: common
+    labels:
+      env: dev
+    fieldSpecs:
+    - path: metadata/labels
+      create: true
+    - path: spec/template/metadata/labels
+      create: true

@@ -39,4 +39,7 @@ Slightly different: Deploy from main to dev, tags with rc to stage, semver witho
 
 
 
+# Retro
+Thinking about using Skaffold for build as  well to get more align local == cloud
+
 

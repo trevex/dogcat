@@ -2,22 +2,21 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 steps:
-- name: 'gcr.io/cloud-builders/docker'
+- name: gcr.io/cloud-builders/docker
   args: [ 'build', '-t', 'europe-west1-docker.pkg.dev/nvoss-dogcat-chapter-02-shared/images/dogcat:$SHORT_SHA', './chapter02b' ]
-- name: 'gcr.io/cloud-builders/gcloud'
+- name: gcr.io/cloud-builders/docker
+  args: [ 'push', 'europe-west1-docker.pkg.dev/nvoss-dogcat-chapter-02-shared/images/dogcat:$SHORT_SHA' ]
+- name: gcr.io/cloud-builders/gcloud
+  entrypoint: 'gcloud'
   args:
   - 'deploy'
   - 'releases'
   - 'create'
   - 'release-$SHORT_SHA'
-  - '--source'
-  - 'chapter02b/'
-  - '--to-target'
-  - 'dev'
-  - '--region'
-  - 'europe-west1'
-  - '--delivery-pipeline'
-  - 'dogcat'
+  - '--source=chapter02b/'
+  - '--region=europe-west1'
+  - '--delivery-pipeline=dogcat'
   - '--images=dogcat=europe-west1-docker.pkg.dev/nvoss-dogcat-chapter-02-shared/images/dogcat:$SHORT_SHA'
+  - '--gcs-source-staging-dir=gs://nvoss-dogcat-chapter-02-shared-deploy-artifacts/source/dogcat'
 images:
 - 'europe-west1-docker.pkg.dev/nvoss-dogcat-chapter-02-shared/images/dogcat:$SHORT_SHA'
