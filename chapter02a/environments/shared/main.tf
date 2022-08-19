@@ -306,6 +306,13 @@ resource "google_project_iam_member" "build_shared_viewer" {
   member   = "serviceAccount:${google_service_account.build[each.value].email}"
 }
 
+resource "google_project_iam_member" "build_deploy_releaser" {
+  for_each = local.environments
+  project  = var.project
+  role     = "roles/clouddeploy.releaser"
+  member   = "serviceAccount:${google_service_account.build[each.value].email}"
+}
+
 resource "google_storage_bucket_iam_member" "build_deploy_artifacts_access" {
   for_each = local.environments
   bucket   = google_storage_bucket.artifacts.id
