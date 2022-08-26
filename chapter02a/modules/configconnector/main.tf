@@ -13,10 +13,10 @@ resource "google_service_account" "configconnector" {
 }
 
 resource "google_project_iam_member" "configconnector_project_access" {
-  #checkov:skip=CKV_GCP_49:We explicitly use owner here, however reducing permissions is recommended.
-  project = var.project
-  role    = "roles/owner"
-  member  = "serviceAccount:${google_service_account.configconnector.email}"
+  for_each = toset(["roles/editor", "roles/iam.serviceAccountAdmin", "roles/cloudsql.client"])
+  project  = var.project
+  role     = each.value
+  member   = "serviceAccount:${google_service_account.configconnector.email}"
 }
 
 resource "google_service_account_iam_member" "configconnector_workload_identity" {

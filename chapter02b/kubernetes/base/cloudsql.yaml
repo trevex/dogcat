@@ -1,0 +1,40 @@
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLInstance
+metadata:
+  name: dogcat
+spec:
+  databaseVersion: POSTGRES_14
+  region: europe-west1
+  settings:
+    tier: db-custom-1-3840
+    availabilityType: ZONAL
+---
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLDatabase
+metadata:
+  name: dogcat
+spec:
+  charset: 'UTF8'
+  collation: 'en_US.UTF8'
+  instanceRef:
+    name: dogcat
+---
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLUser
+metadata:
+  name: dogcat
+spec:
+  instanceRef:
+    name: dogcat
+  password:
+    valueFrom:
+      secretKeyRef:
+        name: dogcat-db-pw
+        key: password
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dogcat-db-pw
+data: # TODO: properly manage secret!
+  password: cGFzc3dvcmQ=

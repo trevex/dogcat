@@ -29,6 +29,7 @@ resource "google_project_service" "services" {
     "cloudresourcemanager.googleapis.com", # required by terraform
     "compute.googleapis.com",
     "container.googleapis.com",
+    "sqladmin.googleapis.com",
   ])
   project = var.project
   service = each.value
@@ -81,6 +82,12 @@ provider "kubectl" {
   load_config_file       = false
 }
 
+provider "kubernetes" {
+  host                   = module.cluster.host
+  token                  = data.google_client_config.cluster.access_token
+  cluster_ca_certificate = module.cluster.cluster_ca_certificate
+}
+
 module "configconnector" {
   source = "../../modules//configconnector"
 
@@ -89,3 +96,13 @@ module "configconnector" {
   depends_on = [module.cluster]
 }
 
+module "team" {
+  for_each = var.teams
+
+  source = "../../modules//team"
+
+  project = var.project
+  name    = each.value
+
+  depends_on = [module.cluster]
+}

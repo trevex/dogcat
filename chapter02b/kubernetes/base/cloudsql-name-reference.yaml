@@ -1,0 +1,11 @@
+nameReference:
+- kind: SQLInstance
+  fieldSpecs:
+  - kind: SQLUser
+    path: spec/instanceRef/name
+  - kind: SQLDatabase
+    path: spec/instanceRef/name
+- kind: Secret
+  fieldSpecs:
+  - kind: SQLUser
+    path: spec/password/valueFrom/secretKeyRef/name
