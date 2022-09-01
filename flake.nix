@@ -51,7 +51,7 @@
             checkov
             tflint
             kubectl
-            kustomize
+            kubernetes-helm
             skaffold
           ];
         };

@@ -17,5 +17,6 @@ spec:
       containers:
       - name: dogcat
         image: dogcat
+        args: ["server"]
         ports:
         - containerPort: 4000

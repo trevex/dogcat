@@ -23,7 +23,7 @@ import (
 func NewServerCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:           "server [flags] [config-file]",
-		Short:         "Starts the Webserver and GraphQL API",
+		Short:         "Starts the Webserver and API",
 		SilenceErrors: true,
 	}
 

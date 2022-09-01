@@ -1,0 +1,53 @@
+{{- $region := .Values.region | required ".Values.region is required." -}}
+---
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLInstance
+metadata:
+  name: {{ include "dogcat.fullname" . }}
+  labels:
+    {{- include "dogcat.labels" . | nindent 4 }}
+  {{- with .Values.cloudsql.deletionPolicy }}
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: {{ . }}
+  {{- end }}
+spec:
+  databaseVersion: {{ .Values.cloudsql.databaseVersion }}
+  region: {{ $region }}
+  settings:
+    tier: {{ .Values.cloudsql.tier }}
+    availabilityType: {{ .Values.cloudsql.availabilityType }}
+---
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLDatabase
+metadata:
+  name: {{ include "dogcat.fullname" . }}
+  labels:
+    {{- include "dogcat.labels" . | nindent 4 }}
+  {{- with .Values.cloudsql.deletionPolicy }}
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: {{ . }}
+  {{- end }}
+spec:
+  charset: 'UTF8'
+  collation: 'en_US.UTF8'
+  instanceRef:
+    name: {{ include "dogcat.fullname" . }}
+---
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLUser
+metadata:
+  name: {{ include "dogcat.fullname" . }}
+  labels:
+    {{- include "dogcat.labels" . | nindent 4 }}
+  {{- with .Values.cloudsql.deletionPolicy }}
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: {{ . }}
+  {{- end }}
+spec:
+  instanceRef:
+    name: {{ include "dogcat.fullname" . }}
+  password:
+    valueFrom:
+      secretKeyRef:
+        name: {{ include "dogcat.fullname" . }}
+        key: password

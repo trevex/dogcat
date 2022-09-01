@@ -33,6 +33,15 @@ https://cloud.google.com/sdk/gcloud/reference/beta/builds/triggers/create/cloud-
 
 
 
+Use skaffold to deploy manually
+```
+gcloud auth configure-docker europe-west1-docker.pkg.dev # once
+skaffold render -p dev -i dogcat=europe-west1-docker.pkg.dev/nvoss-dogcat-chapter-02-shared/images/dogcat:8dd53bc
+```
+
+Skaffold also has dev setup etc not covered, but to deploy manually locally checkout local and adapt image override
+
+
 # Git flow
 
 Slightly different: Deploy from main to dev, tags with rc to stage, semver without suffix to prod (but approval)

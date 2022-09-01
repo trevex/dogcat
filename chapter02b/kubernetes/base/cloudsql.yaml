@@ -38,3 +38,10 @@ metadata:
   name: dogcat-db-pw
 data: # TODO: properly manage secret!
   password: cGFzc3dvcmQ=
+---
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMServiceAccount
+metadata:
+  name: dogcat
+spec:
+  displayName: Used by dogcat application for database access

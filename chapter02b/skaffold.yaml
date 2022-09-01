@@ -1,8 +1,42 @@
 apiVersion: skaffold/v2beta26
 kind: Config
+build:
+  artifacts:
+    - image: dogcat
 profiles:
   - name: dev
     deploy:
-      kustomize:
-        paths:
-          - ./kubernetes/dev
+      helm:
+        releases:
+        - name: dogcat-dev
+          namespace: dogcat
+          chartPath: helm/dogcat
+          valuesFiles: [helm/dev.yaml]
+          artifactOverrides:
+            image: dogcat
+          imageStrategy:
+            helm: {}
+  - name: stage
+    deploy:
+      helm:
+        releases:
+        - name: dogcat-stage
+          namespace: dogcat
+          chartPath: helm/dogcat
+          valuesFiles: [helm/stage.yaml]
+          artifactOverrides:
+            image: dogcat
+          imageStrategy:
+            helm: {}
+  - name: prod
+    deploy:
+      helm:
+        releases:
+        - name: dogcat-prod
+          namespace: dogcat
+          chartPath: helm/dogcat
+          valuesFiles: [helm/prod.yaml]
+          artifactOverrides:
+            image: dogcat
+          imageStrategy:
+            helm: {}
