@@ -13,7 +13,7 @@ resource "google_service_account" "configconnector" {
 }
 
 resource "google_project_iam_member" "configconnector_project_access" {
-  for_each = toset(["roles/editor", "roles/iam.serviceAccountAdmin", "roles/cloudsql.client"])
+  for_each = toset(["roles/editor", "roles/iam.serviceAccountAdmin", "roles/cloudsql.client", "roles/resourcemanager.projectIamAdmin"])
   project  = var.project
   role     = each.value
   member   = "serviceAccount:${google_service_account.configconnector.email}"

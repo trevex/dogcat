@@ -9,6 +9,7 @@ import (
 	"github.com/NucleusEngineering/dogcat/chapter02b/ent/db"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
 )
 
@@ -87,6 +88,7 @@ func AddAPIRoutes(e *db.Client, r gin.IRoutes) {
 		return func(c *gin.Context) {
 			scores, err := e.Score.Query().Limit(10).Order(db.Desc("score")).All(c.Request.Context())
 			if err != nil {
+				log.Error().Err(err).Msg("failed listing scores")
 				c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed listing scores!"})
 				return
 			}
@@ -129,6 +131,7 @@ func AddAPIRoutes(e *db.Client, r gin.IRoutes) {
 			SetScore(data.Score).
 			SetUsername(data.Username).Save(c.Request.Context())
 		if err != nil {
+			log.Error().Err(err).Msg("failed saving score")
 			c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed saving score!"})
 			return
 		}
