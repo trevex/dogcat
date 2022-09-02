@@ -21,7 +21,7 @@ cloudsql:
   deletionPolicy: ""
   databaseVersion: POSTGRES_14
   availabilityType: ZONAL
-  tier: db-custom-1-3840
+  tier: db-f1-micro
 
 serviceAccount:
   # Annotations to add to the service account

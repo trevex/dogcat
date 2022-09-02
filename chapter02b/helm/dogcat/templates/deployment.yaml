@@ -1,3 +1,5 @@
+{{- $project := .Values.project | required ".Values.project is required." -}}
+{{- $region := .Values.region | required ".Values.region is required." -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,7 +26,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "dogcat.serviceAccountName" . }}
+      serviceAccountName: {{ include "dogcat.fullname" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -33,9 +35,23 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "dogcat.fullname" . }}
+                  key: password
+                  optional: false
+          args: ["server"]
+          args:
+            - server
+            - --driver
+            - cloudsqlpostgres
+            - --conn-str
+            - '"host={{ $project }}:{{ $region }}:{{ include "dogcat.fullname" . }} user={{ include "dogcat.fullname" . }} dbname={{ include "dogcat.fullname" . }} password=$(DB_PASSWORD) sslmode=disable"'
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 4000
               protocol: TCP
           livenessProbe:
             httpGet:
