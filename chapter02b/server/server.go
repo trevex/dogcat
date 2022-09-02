@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"database/sql"
 	"io"
 	"net/http"
 	"net/http/httputil"
@@ -10,11 +9,10 @@ import (
 	"time"
 
 	"github.com/NucleusEngineering/dogcat/chapter02b/ent"
-	entdb "github.com/NucleusEngineering/dogcat/chapter02b/ent/db"
 	"github.com/NucleusEngineering/dogcat/chapter02b/web"
 
-	"entgo.io/ent/dialect"
-	entsql "entgo.io/ent/dialect/sql"
+	"cloud.google.com/go/cloudsqlconn"
+	"cloud.google.com/go/cloudsqlconn/postgres/pgxv4"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/logger"
 	limits "github.com/gin-contrib/size"
@@ -76,20 +74,17 @@ func NewServerCmd() *cobra.Command {
 			fileServer = http.HandlerFunc(handler(proxy))
 		}
 
+		// In the cloud we work with CloudSQL let's register CloudSQL-pgx-driver as default
+		cleanup, err := pgxv4.RegisterDriver("postgres", cloudsqlconn.WithIAMAuthN())
+		if err != nil {
+			return err
+		}
+		defer cleanup()
+
 		// Open database connection
-		var e *entdb.Client
-		if driver == ent.CloudSQLPostgres {
-			db, err := sql.Open(driver, connStr)
-			if err != nil {
-				return err
-			}
-			drv := entsql.OpenDB(dialect.Postgres, db)
-			e = entdb.NewClient(entdb.Driver(drv))
-		} else {
-			e, err = ent.Open(ctx, driver, connStr)
-			if err != nil {
-				return err
-			}
+		e, err := ent.Open(ctx, driver, connStr)
+		if err != nil {
+			return err
 		}
 
 		r := gin.New()
