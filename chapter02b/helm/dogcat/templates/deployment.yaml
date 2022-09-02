@@ -46,9 +46,9 @@ spec:
           args:
             - server
             - --driver
-            - cloudsqlpostgres
+            - postgres
             - --conn-str
-            - '"host={{ $project }}:{{ $region }}:{{ include "dogcat.fullname" . }} user={{ include "dogcat.fullname" . }} dbname={{ include "dogcat.fullname" . }} password=$(DB_PASSWORD) sslmode=disable"'
+            - host={{ $project }}:{{ $region }}:{{ include "dogcat.fullname" . }} user={{ include "dogcat.fullname" . }} dbname={{ include "dogcat.fullname" . }} password=$(DB_PASSWORD) sslmode=disable
           ports:
             - name: http
               containerPort: 4000
