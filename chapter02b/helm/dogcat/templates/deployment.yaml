@@ -42,7 +42,6 @@ spec:
                   name: {{ include "dogcat.fullname" . }}
                   key: password
                   optional: false
-          args: ["server"]
           args:
             - server
             - --driver
