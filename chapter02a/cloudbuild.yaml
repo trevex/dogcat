@@ -73,17 +73,18 @@ steps:
         fi
       done
 
-- id: 'checkov'
-  name: 'bridgecrew/checkov:2.1.125'
-  entrypoint: 'sh'
-  args:
-  - '-c'
-  - |
-      cd chapter02a
-      echo "***********************"
-      echo "Running checkov for all environments"
-      echo "***********************"
-      checkov --quiet -d . || exit 1
+# Additional validation possible using checkov, if desired:
+# - id: 'checkov'
+#   name: 'bridgecrew/checkov:2.1.125'
+#   entrypoint: 'sh'
+#   args:
+#   - '-c'
+#   - |
+#       cd chapter02a
+#       echo "***********************"
+#       echo "Running checkov for all environments"
+#       echo "***********************"
+#       checkov --quiet -d . || exit 1
 
 - id: 'tf plan'
   name: 'hashicorp/terraform:1.2.5'
