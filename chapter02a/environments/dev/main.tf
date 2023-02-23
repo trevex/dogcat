@@ -38,7 +38,7 @@ resource "google_project_service" "services" {
 module "network" {
   source = "../../modules//network"
 
-  name = "dev-network"
+  name = "network-dev"
   subnetworks = [{
     name_affix    = "main" # full name will be `${name}-${name_affix}-${region}`
     ip_cidr_range = "10.0.0.0/20"
@@ -62,47 +62,39 @@ module "network" {
 module "cluster" {
   source = "../../modules//cluster"
 
-  name                   = "dev-cluster"
+  name                   = "cluster-dev"
   project                = var.project
   region                 = var.region
   network_id             = module.network.id
-  subnetwork_id          = module.network.subnetworks["dev-network-main-europe-west1"].id
+  subnetwork_id          = module.network.subnetworks["network-dev-main-europe-west1"].id
   master_ipv4_cidr_block = "172.16.0.0/28"
 
   depends_on = [google_project_service.services]
 }
 
+# data "google_client_config" "cluster" {}
 
-data "google_client_config" "cluster" {}
+# provider "kubectl" {
+#   host                   = module.cluster.host
+#   token                  = data.google_client_config.cluster.access_token
+#   cluster_ca_certificate = module.cluster.cluster_ca_certificate
+#   load_config_file       = false
+# }
 
-provider "kubectl" {
-  host                   = module.cluster.host
-  token                  = data.google_client_config.cluster.access_token
-  cluster_ca_certificate = module.cluster.cluster_ca_certificate
-  load_config_file       = false
-}
+# provider "kubernetes" {
+#   host                   = module.cluster.host
+#   token                  = data.google_client_config.cluster.access_token
+#   cluster_ca_certificate = module.cluster.cluster_ca_certificate
+# }
 
-provider "kubernetes" {
-  host                   = module.cluster.host
-  token                  = data.google_client_config.cluster.access_token
-  cluster_ca_certificate = module.cluster.cluster_ca_certificate
-}
 
-module "configconnector" {
-  source = "../../modules//configconnector"
+# module "team" {
+#   for_each = var.teams
 
-  project = var.project
+#   source = "../../modules//team"
 
-  depends_on = [module.cluster]
-}
+#   project = var.project
+#   name    = each.value
 
-module "team" {
-  for_each = var.teams
-
-  source = "../../modules//team"
-
-  project = var.project
-  name    = each.value
-
-  depends_on = [module.cluster]
-}
+#   depends_on = [module.cluster]
+# }

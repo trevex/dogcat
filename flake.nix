@@ -46,6 +46,7 @@
             gnumake
             findutils
             tmux
+            google-cloud-sdk
             terraform
             tfsec
             checkov
