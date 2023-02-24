@@ -20,5 +20,5 @@ variable "create_source_repository" {
 }
 
 variable "state_bucket_name" {
-  type = string
+  type = string # TODO: remove
 }
