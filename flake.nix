@@ -47,11 +47,13 @@
             findutils
             tmux
             google-cloud-sdk
+            (google-cloud-sdk.withExtraComponents [
+              pkgs.google-cloud-sdk.components.kubectl
+              pkgs.google-cloud-sdk.components.gke-gcloud-auth-plugin
+            ])
             terraform
             tfsec
-            checkov
             tflint
-            kubectl
             kubernetes-helm
             skaffold
           ];

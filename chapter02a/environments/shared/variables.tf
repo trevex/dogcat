@@ -19,6 +19,18 @@ variable "create_source_repository" {
   type = bool
 }
 
+variable "tekton_pipeline_version" {
+  type = string
+}
+
+variable "tekton_triggers_version" {
+  type = string
+}
+
+variable "tekton_dashboard_version" {
+  type = string
+}
+
 variable "state_bucket_name" {
   type = string # TODO: remove
 }

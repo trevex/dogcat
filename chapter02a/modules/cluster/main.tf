@@ -63,6 +63,12 @@ resource "google_container_cluster" "cluster" {
     }
   }
 
+  node_pool_auto_config {
+    network_tags {
+      tags = [var.name]
+    }
+  }
+
   gateway_api_config {
     channel = "CHANNEL_STANDARD"
   }
@@ -88,3 +94,17 @@ resource "google_container_cluster" "cluster" {
   }
 }
 
+
+resource "google_compute_firewall" "cluster_admission_controller_access" {
+  project     = var.project
+  name        = "allow-gke-cp-access-admission-controller"
+  network     = var.network_id
+  description = "Allow ingress on tcp from GKE Control-Plane"
+
+  allow {
+    protocol = "tcp"
+  }
+
+  source_ranges = [google_container_cluster.cluster.private_cluster_config[0].master_ipv4_cidr_block]
+  target_tags   = [var.name]
+}

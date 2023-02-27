@@ -4,3 +4,6 @@ clusters                 = ["projects/nvoss-dogcat-chapter-02-dev/locations/euro
 source_repository_name   = "infrastructure"
 create_source_repository = true
 state_bucket_name        = "nvoss-dogcat-chapter-02-tf-state"
+tekton_pipeline_version  = "v0.45.0"
+tekton_triggers_version  = "v0.22.2"
+tekton_dashboard_version = "v0.33.0"

@@ -136,3 +136,28 @@ module "cluster" {
 
 # Setup Tekton and ArgoCD
 
+data "google_client_config" "cluster" {}
+
+provider "kubernetes" {
+  host                   = module.cluster.host
+  token                  = data.google_client_config.cluster.access_token
+  cluster_ca_certificate = module.cluster.cluster_ca_certificate
+}
+
+provider "helm" {
+  kubernetes {
+    host                   = module.cluster.host
+    token                  = data.google_client_config.cluster.access_token
+    cluster_ca_certificate = module.cluster.cluster_ca_certificate
+  }
+}
+
+module "tekton" {
+  source = "../../modules//tekton"
+
+  pipeline_version  = var.tekton_pipeline_version
+  triggers_version  = var.tekton_triggers_version
+  dashboard_version = var.tekton_dashboard_version
+}
+
+

@@ -19,6 +19,11 @@ git remote add chapter02a ssh://admin@nvoss.altostrat.com@source.developers.goog
 Alt: use https://github.com/marketplace/google-cloud-build instead of source repo
 ==> https://cloud.google.com/architecture/managing-infrastructure-as-code
 
+
+export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+gcloud container clusters get-credentials cluster-shared --region europe-west1 --project nvoss-dogcat-chapter-02-shared
+
+
 # TODO
 
 Terraform CI/CD omitted but reference: https://cloud.google.com/architecture/managing-infrastructure-as-code
