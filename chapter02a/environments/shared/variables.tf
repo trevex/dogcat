@@ -12,7 +12,7 @@ variable "clusters" {
 }
 
 variable "source_repository_name" {
-  type = string
+  type = string # TODO: remove?
 }
 
 variable "create_source_repository" {
@@ -31,6 +31,18 @@ variable "tekton_dashboard_version" {
   type = string
 }
 
-variable "state_bucket_name" {
-  type = string # TODO: remove
+variable "dns_project_id" {
+  type = string
+}
+
+variable "dns_zone_name" {
+  type = string
+}
+
+variable "dns_dedicated_fqdn" {
+  type = string
+}
+
+variable "external_dns_version" {
+  type = string
 }

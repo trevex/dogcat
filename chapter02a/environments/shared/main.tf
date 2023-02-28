@@ -28,6 +28,7 @@ resource "google_project_service" "services" {
     "artifactregistry.googleapis.com",
     "sourcerepo.googleapis.com",
     "clouddeploy.googleapis.com",
+    "dns.googleapis.com",
   ])
   project = var.project
   service = each.value
@@ -117,6 +118,19 @@ module "network" {
   depends_on = [google_project_service.services]
 }
 
+# Dedicated zone for the shared project
+
+module "dns_zone" {
+  source = "../../modules//dns-zone"
+
+  parent_project_id = var.dns_project_id
+  parent_zone_name  = var.dns_zone_name
+
+  name = "nvoss-demo-dogcat-shared"
+  fqdn = var.dns_dedicated_fqdn
+
+  depends_on = [google_project_service.services]
+}
 
 
 # Create GKE Autopilot cluster, where platform components will run in, e.g. ArgoCD and Tekton
@@ -160,4 +174,12 @@ module "tekton" {
   dashboard_version = var.tekton_dashboard_version
 }
 
+# External DNS
+
+module "external_dns" {
+  source = "../../modules//external-dns"
+
+  chart_version = var.external_dns_version
+  dns_zones     = [module.dns_zone.fqdn]
+}
 
