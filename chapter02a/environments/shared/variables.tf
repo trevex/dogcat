@@ -11,14 +11,6 @@ variable "clusters" {
   description = "Full cluster IDs of all clusters. Make sure each cluster has a unique name regardless of ID and name includes target environment."
 }
 
-variable "source_repository_name" {
-  type = string # TODO: remove?
-}
-
-variable "create_source_repository" {
-  type = bool
-}
-
 variable "tekton_pipeline_version" {
   type = string
 }
@@ -44,5 +36,13 @@ variable "dns_dedicated_fqdn" {
 }
 
 variable "external_dns_version" {
+  type = string
+}
+
+variable "cert_manager_version" {
+  type = string
+}
+
+variable "letsencrypt_email" {
   type = string
 }

@@ -4,15 +4,21 @@ resource "google_service_account" "sa" {
   project      = var.project_id
 }
 
-resource "kubernetes_service_account" "sa" {
-  metadata {
-    name      = var.name
-    namespace = var.namespace
-    annotations = {
-      "iam.gke.io/gcp-service-account" = google_service_account.sa.email
+# https://github.com/hashicorp/terraform-provider-kubernetes/issues/1724
+resource "kubernetes_manifest" "sa" {
+  manifest = {
+    apiVersion = "v1"
+    kind       = "ServiceAccount"
+    metadata = {
+      name      = var.name
+      namespace = var.namespace
+      annotations = {
+        "iam.gke.io/gcp-service-account" = google_service_account.sa.email
+      }
     }
+
+    automountServiceAccountToken = true
   }
-  automount_service_account_token = true
 }
 
 resource "google_service_account_iam_member" "wi" {

@@ -19,7 +19,7 @@ module "wi" {
 resource "helm_release" "external_dns" {
   repository = "https://charts.bitnami.com/bitnami"
   chart      = "external-dns"
-  version    = var.chart_version
+  version    = trimprefix(var.chart_version, "v")
 
   name      = "external-dns"
   namespace = kubernetes_namespace.dns.metadata[0].name

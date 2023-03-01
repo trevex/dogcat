@@ -72,28 +72,8 @@ resource "google_artifact_registry_repository_iam_member" "compute_ar_reader" {
   role       = "roles/artifactregistry.reader"
   # TODO: This is a rather implicit contract to how the cluster-module works.
   #       Most likely we should revisit this in the future and make it explicit using a variable.
+  #       Maybe moving to the relevant envs would be better...
   member = "serviceAccount:${each.value.name}@${each.value.project}.iam.gserviceaccount.com"
-}
-
-
-# We either create the required repository used for our terraform code or use the specifed one.
-
-resource "google_sourcerepo_repository" "repo" {
-  count = var.create_source_repository ? 1 : 0
-  name  = var.source_repository_name
-
-  depends_on = [google_project_service.services]
-}
-
-data "google_sourcerepo_repository" "repo" {
-  count = var.create_source_repository ? 0 : 1
-  name  = var.source_repository_name
-
-  depends_on = [google_project_service.services]
-}
-
-locals {
-  source_repository = var.create_source_repository ? google_sourcerepo_repository.repo[0] : data.google_sourcerepo_repository.repo[0]
 }
 
 # The underlying network mainly for the cluster
@@ -148,7 +128,9 @@ module "cluster" {
   depends_on = [google_project_service.services]
 }
 
-# Setup Tekton and ArgoCD
+###############################################################################
+# Setup Tekton, ArgoCD, External-DNS, Cert-Manager
+###############################################################################
 
 data "google_client_config" "cluster" {}
 
@@ -165,6 +147,8 @@ provider "helm" {
     cluster_ca_certificate = module.cluster.cluster_ca_certificate
   }
 }
+
+# Tekton
 
 module "tekton" {
   source = "../../modules//tekton"
@@ -183,3 +167,12 @@ module "external_dns" {
   dns_zones     = [module.dns_zone.fqdn]
 }
 
+# Cert-Manager
+
+module "cert_manager" {
+  source = "../../modules//cert-manager"
+
+  chart_version     = var.cert_manager_version
+  dns_zones         = [module.dns_zone.fqdn]
+  letsencrypt_email = var.letsencrypt_email
+}
