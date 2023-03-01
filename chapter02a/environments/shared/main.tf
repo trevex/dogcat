@@ -176,3 +176,11 @@ module "cert_manager" {
   dns_zones         = [module.dns_zone.fqdn]
   letsencrypt_email = var.letsencrypt_email
 }
+
+# ArgoCD
+
+module "argo_cd" {
+  source = "../../modules//argo-cd"
+
+  chart_version = var.argo_cd_version
+}

@@ -46,3 +46,7 @@ variable "cert_manager_version" {
 variable "letsencrypt_email" {
   type = string
 }
+
+variable "argo_cd_version" {
+  type = string
+}
