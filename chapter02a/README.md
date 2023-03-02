@@ -10,6 +10,8 @@ gsutil versioning set on gs://nvoss-dogcat-chapter-02-tf-state
 gcloud auth application-default login
 terraform -chdir=environments/shared init 
 terraform -chdir=environments/shared apply # explain everything that is created!
+
+kubectl get secrets argocd-initial-admin-secret --template={{.data.password}} | base64 --decode
 ```
 
 ```

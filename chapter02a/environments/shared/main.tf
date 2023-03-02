@@ -206,4 +206,8 @@ module "argo_cd" {
   source = "../../modules//argo-cd"
 
   chart_version = var.argo_cd_version
+  domain        = var.argo_cd_domain
+  iap_brand     = google_iap_brand.dogcat.name
+
+  depends_on = [module.cert_manager]
 }

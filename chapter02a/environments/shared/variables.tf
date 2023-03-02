@@ -62,3 +62,7 @@ variable "letsencrypt_email" {
 variable "argo_cd_version" {
   type = string
 }
+
+variable "argo_cd_domain" {
+  type = string
+}
