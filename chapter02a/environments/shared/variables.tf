@@ -11,6 +11,14 @@ variable "clusters" {
   description = "Full cluster IDs of all clusters. Make sure each cluster has a unique name regardless of ID and name includes target environment."
 }
 
+variable "iap_support_email" {
+  type = string
+}
+
+variable "iap_access_domain" {
+  type = string
+}
+
 variable "tekton_pipeline_version" {
   type = string
 }
@@ -20,6 +28,10 @@ variable "tekton_triggers_version" {
 }
 
 variable "tekton_dashboard_version" {
+  type = string
+}
+
+variable "tekton_dashboard_domain" {
   type = string
 }
 

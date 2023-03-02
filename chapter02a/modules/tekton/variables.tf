@@ -9,3 +9,11 @@ variable "triggers_version" {
 variable "dashboard_version" {
   type = string
 }
+
+variable "dashboard_domain" {
+  type = string
+}
+
+variable "iap_brand" {
+  type = string
+}

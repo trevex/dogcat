@@ -29,6 +29,7 @@ resource "google_project_service" "services" {
     "sourcerepo.googleapis.com",
     "clouddeploy.googleapis.com",
     "dns.googleapis.com",
+    "iap.googleapis.com",
   ])
   project = var.project
   service = each.value
@@ -138,6 +139,9 @@ provider "kubernetes" {
   host                   = module.cluster.host
   token                  = data.google_client_config.cluster.access_token
   cluster_ca_certificate = module.cluster.cluster_ca_certificate
+  ignore_annotations = [
+    "cloud\\.google\\.com\\/neg-status"
+  ]
 }
 
 provider "helm" {
@@ -148,14 +152,19 @@ provider "helm" {
   }
 }
 
-# Tekton
+resource "google_iap_brand" "dogcat" {
+  support_email     = var.iap_support_email
+  application_title = "Dogcat Shared"
 
-module "tekton" {
-  source = "../../modules//tekton"
+  depends_on = [google_project_service.services]
+}
 
-  pipeline_version  = var.tekton_pipeline_version
-  triggers_version  = var.tekton_triggers_version
-  dashboard_version = var.tekton_dashboard_version
+resource "google_iap_web_iam_member" "access_iap_policy" {
+  project = var.project
+  role    = "roles/iap.httpsResourceAccessor"
+  member  = "domain:${var.iap_access_domain}"
+
+  depends_on = [google_project_service.services]
 }
 
 # External DNS
@@ -175,6 +184,20 @@ module "cert_manager" {
   chart_version     = var.cert_manager_version
   dns_zones         = [module.dns_zone.fqdn]
   letsencrypt_email = var.letsencrypt_email
+}
+
+# Tekton
+
+module "tekton" {
+  source = "../../modules//tekton"
+
+  pipeline_version  = var.tekton_pipeline_version
+  triggers_version  = var.tekton_triggers_version
+  dashboard_version = var.tekton_dashboard_version
+  dashboard_domain  = var.tekton_dashboard_domain
+  iap_brand         = google_iap_brand.dogcat.name
+
+  depends_on = [module.cert_manager]
 }
 
 # ArgoCD

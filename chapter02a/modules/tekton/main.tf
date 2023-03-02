@@ -33,3 +33,51 @@ module "tekton_dashboard" {
 
   depends_on = [module.tekton_pipeline, module.tekton_triggers]
 }
+
+# Let's expose the dashboard, but protected via IAP
+
+module "tekton_dashboard_iap_service" {
+  source = "..//iap-service"
+
+  iap_brand   = var.iap_brand
+  name        = "tekton-dashboard-iap"
+  namespace   = "tekton-pipelines"
+  selector    = { "app" = "tekton-dashboard" }
+  target_port = 9097
+
+  depends_on = [module.tekton_dashboard]
+}
+
+resource "kubernetes_ingress_v1" "tekton_dasboard_iap" {
+  metadata {
+    name      = "tekton-dashboard-iap"
+    namespace = "tekton-pipelines"
+    annotations = {
+      "cert-manager.io/cluster-issuer" = "letsencrypt"
+    }
+  }
+
+  spec {
+    rule {
+      host = var.dashboard_domain
+      http {
+        path {
+          path = "/*"
+          backend {
+            service {
+              name = module.tekton_dashboard_iap_service.name
+              port {
+                number = module.tekton_dashboard_iap_service.port
+              }
+            }
+          }
+        }
+      }
+    }
+
+    tls {
+      hosts       = [var.dashboard_domain]
+      secret_name = "tekton-dashboard-tls"
+    }
+  }
+}
