@@ -6,11 +6,6 @@ variable "region" {
   type = string
 }
 
-variable "clusters" {
-  type        = set(string)
-  description = "Full cluster IDs of all clusters. Make sure each cluster has a unique name regardless of ID and name includes target environment."
-}
-
 variable "iap_support_email" {
   type = string
 }

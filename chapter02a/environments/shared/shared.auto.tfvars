@@ -1,6 +1,5 @@
 project                  = "nvoss-dogcat-chapter-02-shared"
 region                   = "europe-west1"
-clusters                 = ["projects/nvoss-dogcat-chapter-02-dev/locations/europe-west1/clusters/cluster-dev"]
 dns_project_id           = "nvoss-demo-dns"
 dns_zone_name            = "nvoss-demo"
 dns_dedicated_fqdn       = "shared.dogcat.nvoss.demo.altostrat.com."

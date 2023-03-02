@@ -1,7 +1,29 @@
+data "google_project" "project" {
+}
+
 resource "kubernetes_namespace" "argo_cd" {
   metadata {
     name = "argo-cd"
   }
+}
+
+# We manage our service accounts separately to setup workload-identity for
+# access to other clusters.
+
+module "argo_cd_server_wi" {
+  source = "..//workload-identity"
+
+  project_id = data.google_project.project.project_id
+  name       = "argo-cd-server"
+  namespace  = kubernetes_namespace.argo_cd.metadata[0].name
+}
+
+module "argo_cd_application_controller_wi" {
+  source = "..//workload-identity"
+
+  project_id = data.google_project.project.project_id
+  name       = "argo-cd-application-controller"
+  namespace  = kubernetes_namespace.argo_cd.metadata[0].name
 }
 
 # Intentionally not HA as this is a demo, check for production configuration:
@@ -25,6 +47,22 @@ resource "helm_release" "argo_cd" {
   set {
     name  = "server.extraArgs[0]"
     value = "--insecure"
+  }
+  set {
+    name  = "server.serviceAccount.create"
+    value = "false"
+  }
+  set {
+    name  = "server.serviceAccount.name"
+    value = module.argo_cd_server_wi.k8s_service_account_name
+  }
+  set {
+    name  = "controller.serviceAccount.create"
+    value = "false"
+  }
+  set {
+    name  = "controller.serviceAccount.name"
+    value = module.argo_cd_application_controller_wi.k8s_service_account_name
   }
 }
 

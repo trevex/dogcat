@@ -108,3 +108,5 @@ resource "google_compute_firewall" "cluster_admission_controller_access" {
   source_ranges = [google_container_cluster.cluster.private_cluster_config[0].master_ipv4_cidr_block]
   target_tags   = [var.name]
 }
+
+

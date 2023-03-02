@@ -49,34 +49,6 @@ resource "google_artifact_registry_repository" "images" {
 }
 
 
-# And we give all our compute in cluster projects reader access to container-images
-
-locals {
-  # Format: "projects/my-project-name/locations/us-west1/clusters/example-cluster-name"
-  cluster_splits = [for c in var.clusters : split("/", c)]
-  clusters = { for s in local.cluster_splits : s[5] => {
-    cluster_id = join("/", s)
-    project    = s[1]
-    location   = s[3]
-    name       = s[5]
-    # Environment is extracted from cluster name
-    env = regexall(".*(dev|stage|prod).*", s[5])[0][0]
-  } }
-}
-
-resource "google_artifact_registry_repository_iam_member" "compute_ar_reader" {
-  for_each = local.clusters
-
-  project    = google_artifact_registry_repository.images.project
-  location   = google_artifact_registry_repository.images.location
-  repository = google_artifact_registry_repository.images.name
-  role       = "roles/artifactregistry.reader"
-  # TODO: This is a rather implicit contract to how the cluster-module works.
-  #       Most likely we should revisit this in the future and make it explicit using a variable.
-  #       Maybe moving to the relevant envs would be better...
-  member = "serviceAccount:${each.value.name}@${each.value.project}.iam.gserviceaccount.com"
-}
-
 # The underlying network mainly for the cluster
 
 module "network" {
