@@ -2,6 +2,17 @@
 
 # Code heavy so make sure to also look at the code and its comments
 
+### Argolis users only
+`export SHARED_PROJECT="nvoss-dogcat-chapter-02-shared"`
+```bash
+$ gcloud services enable --project $SHARED_PROJECT orgpolicy.googleapis.com
+Operation "operations/xxx.xxxxxxxxxx" finished successfully.
+$ gcloud beta resource-manager org-policies disable-enforce iam.disableServiceAccountKeyCreation --project=$SHARED_PROJECT
+booleanPolicy: {}
+constraint: constraints/iam.disableServiceAccountKeyCreation
+[...]
+```
+
 # Create the four projects!!!
 
 ```bash
@@ -15,8 +26,11 @@ kubectl get secrets argocd-initial-admin-secret --template={{.data.password}} | 
 ```
 
 ```
-git remote add chapter02a ssh://admin@nvoss.altostrat.com@source.developers.google.com:2022/p/nvoss-dogcat-chapter-02-shared/r/infrastructure
+git remote add applications ssh://admin@nvoss.altostrat.com@source.developers.google.com:2022/p/nvoss-dogcat-chapter-02-shared/r/argo-cd-applications
+git push applications main:master # still uses master as head and head is required to test :|
 ```
+
+TODO: once public maybe we should simplify argocd repo setup by using public github repo?
 
 Alt: use https://github.com/marketplace/google-cloud-build instead of source repo
 ==> https://cloud.google.com/architecture/managing-infrastructure-as-code
