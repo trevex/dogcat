@@ -86,9 +86,26 @@ resource "google_artifact_registry_repository_iam_member" "ar_reader" {
   member = "serviceAccount:${module.cluster.cluster_sa_email}"
 }
 
+data "google_client_config" "cluster" {}
+
+provider "kubernetes" {
+  host                   = module.cluster.host
+  token                  = data.google_client_config.cluster.access_token
+  cluster_ca_certificate = module.cluster.cluster_ca_certificate
+  ignore_annotations = [
+    "cloud\\.google\\.com\\/neg-status"
+  ]
+}
+
 # And we register this cluster declaratively with ArgoCD
 
-data "google_client_config" "cluster" {}
+provider "helm" {
+  kubernetes {
+    host                   = module.cluster.host
+    token                  = data.google_client_config.cluster.access_token
+    cluster_ca_certificate = module.cluster.cluster_ca_certificate
+  }
+}
 
 locals {
   shared_cluster_splits = split("/", var.shared_cluster_id)
@@ -155,18 +172,72 @@ resource "kubernetes_secret" "cluster_registration" {
       }
 EOF
   }
+
   depends_on = [google_project_iam_member.argo_cd_server, google_project_iam_member.argo_cd_application_controller]
 }
 
+resource "kubernetes_namespace" "cluster_applications" {
+  provider = kubernetes.shared
+
+  metadata {
+    labels = {
+      cluster = module.cluster.name
+      env     = regexall(".*(dev|stage|prod).*", module.cluster.name)[0][0] // Let's get the suffix
+    }
+    name = module.cluster.name
+  }
+}
+
+resource "kubernetes_manifest" "cluster_applications" {
+  provider = kubernetes.shared
+
+  manifest = {
+    apiVersion = "argoproj.io/v1alpha1"
+    kind       = "Application"
+    metadata = {
+      name      = module.cluster.name
+      namespace = "argo-cd"
+    }
+    spec = {
+      destination = { # App of apps is installed in shared cluster
+        namespace = kubernetes_namespace.cluster_applications.metadata[0].name
+        server    = "https://kubernetes.default.svc"
+      }
+      project = "default" # NOTE: used for simplicity, but project separation should be considered for production use
+      source = {
+        path           = module.cluster.name
+        repoURL        = var.argo_cd_applications_repo_url
+        targetRevision = "HEAD"
+        helm = {
+          releaseName = "${module.cluster.name}-applications"
+          parameters = [{ # But we point our subsequent apps to our newly created cluster, by passing in helm-parameters
+            name  = "environment"
+            value = "dev"
+            }, {
+            name  = "destination.server"
+            value = module.cluster.host
+          }]
+        }
+      }
+      syncPolicy = var.argo_cd_sync_policy_automated ? {
+        automated = { prune = false }
+      } : null
+    }
+  }
+
+  depends_on = [kubernetes_secret.cluster_registration]
+}
 
 
-# module "team" {
-#   for_each = var.teams
+# Now we setup the team-specific resources
 
-#   source = "../../modules//team"
+module "team" {
+  for_each = var.teams
 
-#   project = var.project
-#   name    = each.value
+  source = "../../modules//team"
 
-#   depends_on = [module.cluster]
-# }
+  project = var.project
+  name    = each.value
+
+  depends_on = [module.cluster]
+}

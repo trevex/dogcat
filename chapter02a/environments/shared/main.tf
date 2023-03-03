@@ -184,30 +184,7 @@ module "argo_cd" {
   depends_on = [module.cert_manager]
 }
 
-# We use the apps of apps pattern, so let's create a source repository and
-# register it with ArgoCD:
-
-resource "google_sourcerepo_repository" "argo_cd_applications" {
-  name = "argo-cd-applications"
-}
-
-resource "google_service_account" "argo_cd_applications" {
-  account_id   = "argo-cd-applications"
-  display_name = "Used by ArgoCD to read from argo-cd-applications repository"
-}
-
-resource "google_sourcerepo_repository_iam_member" "argo_cd_applications" {
-  project    = google_sourcerepo_repository.argo_cd_applications.project
-  repository = google_sourcerepo_repository.argo_cd_applications.name
-  role       = "roles/source.reader"
-  member     = "serviceAccount:${google_service_account.argo_cd_applications.email}"
-}
-
-# NOTE: note best-practice, but ArgoCD lacking better support at the time of
-#       implementing this demo!
-resource "google_service_account_key" "argo_cd_applications" {
-  service_account_id = google_service_account.argo_cd_applications.name
-}
+# We use the apps of apps pattern, so we need to register our applications repository:
 
 resource "kubernetes_secret" "argo_cd_applications" {
   metadata {
@@ -218,9 +195,8 @@ resource "kubernetes_secret" "argo_cd_applications" {
     }
   }
   data = {
-    type                 = "git"
-    url                  = google_sourcerepo_repository.argo_cd_applications.url
-    gcpServiceAccountKey = base64decode(google_service_account_key.argo_cd_applications.private_key)
+    type = "git"
+    url  = var.argo_cd_applications_repo_url
   }
 
   depends_on = [module.argo_cd]

@@ -29,8 +29,9 @@ kubectl get secrets argocd-initial-admin-secret --template={{.data.password}} | 
 git remote add applications ssh://admin@nvoss.altostrat.com@source.developers.google.com:2022/p/nvoss-dogcat-chapter-02-shared/r/argo-cd-applications
 git push applications main:master # still uses master as head and head is required to test :|
 ```
+INSTEAD
+fork `dogcat-applications` as public repo to simplify demo!
 
-TODO: once public maybe we should simplify argocd repo setup by using public github repo?
 
 Alt: use https://github.com/marketplace/google-cloud-build instead of source repo
 ==> https://cloud.google.com/architecture/managing-infrastructure-as-code

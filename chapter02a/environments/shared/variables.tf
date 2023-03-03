@@ -61,3 +61,7 @@ variable "argo_cd_version" {
 variable "argo_cd_domain" {
   type = string
 }
+
+variable "argo_cd_applications_repo_url" {
+  type = string
+}
