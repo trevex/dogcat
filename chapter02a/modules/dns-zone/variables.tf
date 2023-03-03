@@ -1,4 +1,4 @@
-variable "parent_project_id" {
+variable "parent_project" {
   type = string
 }
 

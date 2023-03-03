@@ -1,6 +1,3 @@
-data "google_project" "project" {
-}
-
 resource "kubernetes_namespace" "argo_cd" {
   metadata {
     name = "argo-cd"
@@ -13,17 +10,17 @@ resource "kubernetes_namespace" "argo_cd" {
 module "argo_cd_server_wi" {
   source = "..//workload-identity"
 
-  project_id = data.google_project.project.project_id
-  name       = "argo-cd-server"
-  namespace  = kubernetes_namespace.argo_cd.metadata[0].name
+  project   = var.project
+  name      = "argo-cd-server"
+  namespace = kubernetes_namespace.argo_cd.metadata[0].name
 }
 
 module "argo_cd_application_controller_wi" {
   source = "..//workload-identity"
 
-  project_id = data.google_project.project.project_id
-  name       = "argo-cd-application-controller"
-  namespace  = kubernetes_namespace.argo_cd.metadata[0].name
+  project   = var.project
+  name      = "argo-cd-application-controller"
+  namespace = kubernetes_namespace.argo_cd.metadata[0].name
 }
 
 # Intentionally not HA as this is a demo, check for production configuration:
@@ -64,6 +61,29 @@ resource "helm_release" "argo_cd" {
     name  = "controller.serviceAccount.name"
     value = module.argo_cd_application_controller_wi.k8s_service_account_name
   }
+
+  # We also want to ignore some resources that are automatically created by other
+  # controllers/operators.
+  # Consider properly utilizing AppProject in a production setup for this (e.g. `clusterResourceBlacklist`)!
+  values = [<<EOT
+configs:
+  cm:
+    resource.exclusions: |
+      - apiGroups:
+          - cilium.io
+        kinds:
+          - CiliumIdentity
+        clusters:
+          - "*"
+      - apiGroups:
+          - tekton.dev
+        kinds:
+          - PipelineRun
+          - TaskRun
+        clusters:
+          - "*"
+EOT
+  ]
 }
 
 # Let's expose the ArgoCD server, but protected via IAP

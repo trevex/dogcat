@@ -1,6 +1,3 @@
-data "google_project" "project" {
-}
-
 resource "kubernetes_namespace" "cert_manager" {
   metadata {
     name = "cert-manager"
@@ -10,10 +7,10 @@ resource "kubernetes_namespace" "cert_manager" {
 module "wi" {
   source = "..//workload-identity"
 
-  project_id = data.google_project.project.project_id
-  name       = "cert-manager"
-  namespace  = kubernetes_namespace.cert_manager.metadata[0].name
-  roles      = ["roles/dns.admin"]
+  project   = var.project
+  name      = "cert-manager"
+  namespace = kubernetes_namespace.cert_manager.metadata[0].name
+  roles     = ["roles/dns.admin"]
 }
 
 resource "helm_release" "cert_manager" {
@@ -63,7 +60,7 @@ resource "helm_release" "letsencrypt" {
   }
   set {
     name  = "projectID"
-    value = data.google_project.project.project_id
+    value = var.project
   }
   set {
     name  = "dnsZones"

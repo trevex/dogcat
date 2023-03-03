@@ -1,6 +1,6 @@
 project                       = "nvoss-dogcat-chapter-02-shared"
 region                        = "europe-west1"
-dns_project_id                = "nvoss-demo-dns"
+dns_project                   = "nvoss-demo-dns"
 dns_zone_name                 = "nvoss-demo"
 dns_dedicated_fqdn            = "shared.dogcat.nvoss.demo.altostrat.com."
 iap_access_domain             = "nvoss.altostrat.com"

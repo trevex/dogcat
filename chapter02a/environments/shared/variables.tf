@@ -30,7 +30,7 @@ variable "tekton_dashboard_domain" {
   type = string
 }
 
-variable "dns_project_id" {
+variable "dns_project" {
   type = string
 }
 

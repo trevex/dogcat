@@ -75,6 +75,8 @@ GKE should be private but needs also private cloud build etc
 
 Kpt and backstage UI mention looks promising
 
+ArgoCD permission in-cluster should be limited
+
 # FUTURE:
 
  alternative to chapter02b https://cloud.google.com/kubernetes-engine/docs/tutorials/gitops-cloud-build

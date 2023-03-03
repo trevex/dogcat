@@ -1,6 +1,3 @@
-data "google_project" "project" {
-}
-
 resource "kubernetes_namespace" "dns" {
   metadata {
     name = "external-dns"
@@ -10,10 +7,10 @@ resource "kubernetes_namespace" "dns" {
 module "wi" {
   source = "..//workload-identity"
 
-  project_id = data.google_project.project.project_id
-  name       = "external-dns"
-  namespace  = kubernetes_namespace.dns.metadata[0].name
-  roles      = ["roles/dns.admin"]
+  project   = var.project
+  name      = "external-dns"
+  namespace = kubernetes_namespace.dns.metadata[0].name
+  roles     = ["roles/dns.admin"]
 }
 
 resource "helm_release" "external_dns" {
@@ -42,7 +39,7 @@ resource "helm_release" "external_dns" {
   }
   set {
     name  = "google.project"
-    value = data.google_project.project.project_id
+    value = var.project
   }
   set {
     name  = "domainFilters"

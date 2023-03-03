@@ -1,3 +1,8 @@
+variable "project" {
+  type     = string
+  nullable = false
+}
+
 variable "pipeline_version" {
   type = string
 }

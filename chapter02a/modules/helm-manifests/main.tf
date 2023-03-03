@@ -1,4 +1,6 @@
 data "http" "manifests" {
+  count = var.url != "" ? 1 : 0
+
   url = var.url
   request_headers = {
     Accept = "text/plain"
@@ -14,7 +16,7 @@ resource "helm_release" "manifests" {
 
   values = [<<EOT
 manifests: |
-  ${indent(2, tostring(data.http.manifests.response_body))}
+  ${indent(2, tostring(var.url != "" ? data.http.manifests[0].response_body : var.manifests))}
 EOT
   ]
 }

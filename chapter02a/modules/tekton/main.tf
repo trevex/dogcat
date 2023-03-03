@@ -1,13 +1,13 @@
 
 module "tekton_pipeline" {
-  source = "..//remote-manifests"
+  source = "..//helm-manifests"
 
   url  = "https://storage.googleapis.com/tekton-releases/pipeline/previous/${var.pipeline_version}/release.yaml"
   name = "tekton-pipeline"
 }
 
 module "tekton_triggers" {
-  source = "..//remote-manifests"
+  source = "..//helm-manifests"
 
   url  = "https://storage.googleapis.com/tekton-releases/triggers/previous/${var.triggers_version}/release.yaml"
   name = "tekton-triggers"
@@ -16,7 +16,7 @@ module "tekton_triggers" {
 }
 
 module "tekton_interceptors" {
-  source = "..//remote-manifests"
+  source = "..//helm-manifests"
 
   url  = "https://storage.googleapis.com/tekton-releases/triggers/previous/${var.triggers_version}/interceptors.yaml"
   name = "tekton-interceptors"
@@ -26,7 +26,7 @@ module "tekton_interceptors" {
 }
 
 module "tekton_dashboard" {
-  source = "..//remote-manifests"
+  source = "..//helm-manifests"
 
   url  = "https://storage.googleapis.com/tekton-releases/dashboard/previous/${var.dashboard_version}/release.yaml"
   name = "tekton-dashboard"
@@ -80,4 +80,19 @@ resource "kubernetes_ingress_v1" "tekton_dasboard_iap" {
       secret_name = "tekton-dashboard-tls"
     }
   }
+}
+
+resource "kubernetes_namespace" "tekton" {
+  metadata {
+    name = "tekton"
+  }
+}
+
+module "wi" {
+  source = "..//workload-identity"
+
+  project   = var.project
+  name      = "tekton"
+  namespace = kubernetes_namespace.tekton.metadata[0].name
+  roles     = ["roles/artifactregistry.writer"] # NOTE: should be more fine-granular for production on per AR-level
 }

@@ -1,5 +1,11 @@
 variable "url" {
-  type = string
+  type    = string
+  default = ""
+}
+
+variable "manifests" {
+  type    = string
+  default = ""
 }
 
 variable "name" {

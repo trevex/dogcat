@@ -76,8 +76,8 @@ module "network" {
 module "dns_zone" {
   source = "../../modules//dns-zone"
 
-  parent_project_id = var.dns_project_id
-  parent_zone_name  = var.dns_zone_name
+  parent_project   = var.dns_project
+  parent_zone_name = var.dns_zone_name
 
   name = "nvoss-demo-dogcat-shared"
   fqdn = var.dns_dedicated_fqdn
@@ -144,6 +144,7 @@ resource "google_iap_web_iam_member" "access_iap_policy" {
 module "external_dns" {
   source = "../../modules//external-dns"
 
+  project       = var.project
   chart_version = var.external_dns_version
   dns_zones     = [module.dns_zone.fqdn]
 }
@@ -153,23 +154,10 @@ module "external_dns" {
 module "cert_manager" {
   source = "../../modules//cert-manager"
 
+  project           = var.project
   chart_version     = var.cert_manager_version
   dns_zones         = [module.dns_zone.fqdn]
   letsencrypt_email = var.letsencrypt_email
-}
-
-# Tekton
-
-module "tekton" {
-  source = "../../modules//tekton"
-
-  pipeline_version  = var.tekton_pipeline_version
-  triggers_version  = var.tekton_triggers_version
-  dashboard_version = var.tekton_dashboard_version
-  dashboard_domain  = var.tekton_dashboard_domain
-  iap_brand         = google_iap_brand.dogcat.name
-
-  depends_on = [module.cert_manager]
 }
 
 # ArgoCD
@@ -177,11 +165,27 @@ module "tekton" {
 module "argo_cd" {
   source = "../../modules//argo-cd"
 
+  project       = var.project
   chart_version = var.argo_cd_version
   domain        = var.argo_cd_domain
   iap_brand     = google_iap_brand.dogcat.name
 
   depends_on = [module.cert_manager]
+}
+
+# Tekton
+
+module "tekton" {
+  source = "../../modules//tekton"
+
+  project           = var.project
+  pipeline_version  = var.tekton_pipeline_version
+  triggers_version  = var.tekton_triggers_version
+  dashboard_version = var.tekton_dashboard_version
+  dashboard_domain  = var.tekton_dashboard_domain
+  iap_brand         = google_iap_brand.dogcat.name
+
+  depends_on = [module.cert_manager, module.argo_cd]
 }
 
 # We use the apps of apps pattern, so we need to register our applications repository:
@@ -201,4 +205,35 @@ resource "kubernetes_secret" "argo_cd_applications" {
 
   depends_on = [module.argo_cd]
 }
+
+# We also use ArgoCD to deploy Tekton Pipelines for our applications:
+
+module "tekton_application_pipelines" {
+  # We intentionally do not use `kubernetes_manifest` to as it will not
+  # successfully plan until ArgoCD is installed.
+  source = "../../modules//helm-manifests"
+
+  name      = "tekton-application-pipelines"
+  manifests = <<EOF
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tekton-application-pipelines
+  namespace: argo-cd
+spec:
+  destination:
+    namespace: tekton
+    server: "https://kubernetes.default.svc"
+  project: default
+  source:
+    path: "tekton"
+    repoURL: ${var.argo_cd_applications_repo_url}
+    targetRevision: HEAD
+  syncPolicy:
+    automated: {}
+EOF
+
+  depends_on = [module.tekton]
+}
+
 
