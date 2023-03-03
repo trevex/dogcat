@@ -96,3 +96,4 @@ module "wi" {
   namespace = kubernetes_namespace.tekton.metadata[0].name
   roles     = ["roles/artifactregistry.writer"] # NOTE: should be more fine-granular for production on per AR-level
 }
+

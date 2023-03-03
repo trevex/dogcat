@@ -136,3 +136,60 @@ resource "kubernetes_ingress_v1" "argo_cd_iap" {
     }
   }
 }
+
+module "argo_cd_image_updater_wi" {
+  source = "..//workload-identity"
+
+  project   = var.project
+  name      = "argo-cd-image-updater"
+  namespace = kubernetes_namespace.argo_cd.metadata[0].name
+}
+
+resource "helm_release" "argo_cd_image_updater" {
+  repository = "https://argoproj.github.io/argo-helm"
+  chart      = "argocd-image-updater"
+  version    = trimprefix(var.image_updater_chart_version, "v")
+
+  name      = "argo-cd-image-updater"
+  namespace = kubernetes_namespace.argo_cd.metadata[0].name
+
+  set {
+    name  = "fullnameOverride"
+    value = "argo-cd-image-updater"
+  }
+  set {
+    name  = "serviceAccount.create"
+    value = "false"
+  }
+  set {
+    name  = "serviceAccount.name"
+    value = module.argo_cd_image_updater_wi.k8s_service_account_name
+  }
+
+  # We use workload identity to authenticate as illustrated here:
+  # https://github.com/argoproj-labs/argocd-image-updater/issues/319
+  values = [<<EOT
+config:
+  argocd:
+    grpcWeb: false
+    serverAddress: "http://${helm_release.argo_cd.name}-server.${kubernetes_namespace.argo_cd.metadata[0].name}"
+    insecure: true
+    plaintext: true
+  registries:
+    - name: GCP Artifact Repository
+      api_url: https://${var.artifact_repository_location}-docker.pkg.dev
+      prefix: ${var.artifact_repository_location}-docker.pkg.dev
+      credentials: ext:/scripts/gcp.sh
+      credsexpire: 30m
+
+authScripts:
+  enabled: true
+  scripts:
+    gcp.sh: |
+      #!/bin/sh
+      ACCESS_TOKEN=$(wget --header 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token -q -O - | grep -Eo '"access_token":.*?[^\\]",' | cut -d '"' -f 4)
+      echo "oauth2accesstoken:$ACCESS_TOKEN"
+EOT
+  ]
+}
+

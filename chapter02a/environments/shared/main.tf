@@ -101,6 +101,15 @@ module "cluster" {
   depends_on = [google_project_service.services]
 }
 
+resource "google_artifact_registry_repository_iam_member" "cluster_ar_reader" {
+  project    = google_artifact_registry_repository.images.project
+  location   = google_artifact_registry_repository.images.location
+  repository = google_artifact_registry_repository.images.name
+
+  role   = "roles/artifactregistry.reader"
+  member = "serviceAccount:${module.cluster.cluster_sa_email}"
+}
+
 ###############################################################################
 # Setup Tekton, ArgoCD, External-DNS, Cert-Manager
 ###############################################################################
@@ -165,12 +174,23 @@ module "cert_manager" {
 module "argo_cd" {
   source = "../../modules//argo-cd"
 
-  project       = var.project
-  chart_version = var.argo_cd_version
-  domain        = var.argo_cd_domain
-  iap_brand     = google_iap_brand.dogcat.name
+  project                      = var.project
+  chart_version                = var.argo_cd_version
+  image_updater_chart_version  = var.argo_cd_image_updater_version
+  domain                       = var.argo_cd_domain
+  iap_brand                    = google_iap_brand.dogcat.name
+  artifact_repository_location = google_artifact_registry_repository.images.location
 
   depends_on = [module.cert_manager]
+}
+
+resource "google_artifact_registry_repository_iam_member" "argo_cd_ar_reader" {
+  project    = google_artifact_registry_repository.images.project
+  location   = google_artifact_registry_repository.images.location
+  repository = google_artifact_registry_repository.images.name
+
+  role   = "roles/artifactregistry.reader"
+  member = "serviceAccount:${module.argo_cd.image_updater_service_account_email}"
 }
 
 # Tekton

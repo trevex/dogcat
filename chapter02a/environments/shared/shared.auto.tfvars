@@ -13,5 +13,6 @@ tekton_dashboard_domain       = "tekton.shared.dogcat.nvoss.demo.altostrat.com"
 external_dns_version          = "v6.14.0" # chart-version
 cert_manager_version          = "v1.11.0" # chart-version
 argo_cd_version               = "v5.23.5" # chart-version
+argo_cd_image_updater_version = "v0.8.4"  # chart-version
 argo_cd_domain                = "argocd.shared.dogcat.nvoss.demo.altostrat.com"
 argo_cd_applications_repo_url = "https://github.com/trevex/test-applications.git"

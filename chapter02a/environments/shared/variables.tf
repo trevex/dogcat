@@ -58,6 +58,10 @@ variable "argo_cd_version" {
   type = string
 }
 
+variable "argo_cd_image_updater_version" {
+  type = string
+}
+
 variable "argo_cd_domain" {
   type = string
 }
