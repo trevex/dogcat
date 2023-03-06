@@ -97,3 +97,4 @@ module "wi" {
   roles     = ["roles/artifactregistry.writer"] # NOTE: should be more fine-granular for production on per AR-level
 }
 
+

@@ -256,4 +256,185 @@ EOF
   depends_on = [module.tekton]
 }
 
+# Let's configure a tekton trigger, that can schedule PipelineRuns
 
+resource "random_password" "tekton_trigger_secret" {
+  length  = 64
+  special = true
+}
+
+module "tekton_triggers" {
+  # We intentionally do not use `kubernetes_manifest` to as it will not
+  # successfully plan until Tekton is installed.
+  source = "../../modules//helm-manifests"
+
+  name      = "tekton-triggers"
+  namespace = "tekton"
+  manifests = <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tekton-trigger-secret
+type: Opaque
+stringData:
+  shared-secret: "${random_password.tekton_trigger_secret.result}"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-triggers
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-triggers-eventlistener-binding
+subjects:
+  - kind: ServiceAccount
+    name: tekton-triggers
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-eventlistener-roles
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tekton-triggers-eventlistener-clusterbinding
+subjects:
+  - kind: ServiceAccount
+    name: tekton-triggers
+    namespace: tekton
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-eventlistener-clusterroles
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: github-listener
+spec:
+  serviceAccountName: tekton-triggers
+  triggers:
+    - name: github-listener
+      interceptors:
+        - ref:
+            name: "github"
+          params:
+            - name: "secretRef"
+              value:
+                secretName: tekton-trigger-secret
+                secretKey: shared-secret
+            - name: "eventTypes"
+              value: [ "push" ]
+        - ref:
+            name: "cel"
+          params:
+          - name: "overlays"
+            value:
+            - key: image_tag
+              expression: "body.ref.startsWith('refs/tags/') ? body.ref.split('/')[2] : body.head_commit.id"
+      bindings:
+        - ref: github-binding
+      template:
+        ref: github-template
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: github-binding
+spec:
+  params:
+    - name: repoName
+      value: $(body.name)
+    - name: repoRevision
+      value: $(body.head_commit.id)
+    - name: repoURL
+      value: git@github.com:NucleusEngineering/$(body.name).git
+    - name: image
+      value: europe-west1-docker.pkg.dev/nvoss-dogcat-chapter-02-shared/images/$(body.name):$(extensions.image_tag)
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: github-template
+spec:
+  params:
+    - name: repoName
+    - name: repoRevision
+    - name: repoURL
+    - name: image
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: $(tt.params.repoName)-run-
+      spec:
+        serviceAccountName: tekton
+        pipelineRef:
+          name: $(tt.params.repoName)
+        params:
+          - name: repoRevision
+            value: $(tt.params.repoRevision)
+          - name: repoURL
+            value: $(tt.params.repoURL)
+          - name: image
+            value: $(tt.params.image)
+        podTemplate:
+          securityContext:
+            fsGroup: 65532
+          nodeSelector:
+            cloud.google.com/gke-spot: "true"
+        workspaces:
+        - name: shared-data
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+              - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 4Gi
+EOF
+
+  depends_on = [module.tekton]
+}
+
+locals {
+  tekton_trigger_domain = "trigger.${var.tekton_dashboard_domain}"
+}
+
+resource "kubernetes_ingress_v1" "tekton_trigger" {
+  metadata {
+    name      = "tekton-trigger"
+    namespace = "tekton"
+    annotations = {
+      "cert-manager.io/cluster-issuer" = "letsencrypt"
+    }
+  }
+
+  spec {
+    rule {
+      host = local.tekton_trigger_domain
+      http {
+        path {
+          path = "/*"
+          backend {
+            service {
+              name = "el-github-listener"
+              port {
+                number = 8080
+              }
+            }
+          }
+        }
+      }
+    }
+
+    tls {
+      hosts       = [local.tekton_trigger_domain]
+      secret_name = "tekton-trigger-tls"
+    }
+  }
+
+  depends_on = [module.tekton_triggers]
+}

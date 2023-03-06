@@ -23,6 +23,7 @@ terraform -chdir=environments/shared init
 terraform -chdir=environments/shared apply # explain everything that is created!
 
 kubectl get secrets argocd-initial-admin-secret --template={{.data.password}} | base64 --decode
+terraform -chdir=environments/shared output tekton_trigger_secret
 ```
 
 ```
