@@ -266,6 +266,8 @@ resource "random_password" "tekton_trigger_secret" {
 module "tekton_triggers" {
   # We intentionally do not use `kubernetes_manifest` to as it will not
   # successfully plan until Tekton is installed.
+  # This can be avoided by using tools such as terragrunt or terramate
+  # in a non-demo setup.
   source = "../../modules//helm-manifests"
 
   name      = "tekton-triggers"

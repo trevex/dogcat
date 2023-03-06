@@ -228,6 +228,22 @@ resource "kubernetes_manifest" "cluster_applications" {
   depends_on = [kubernetes_secret.cluster_registration]
 }
 
+# Kyverno
+
+module "kyverno" {
+  source = "../../modules//kyverno"
+
+  chart_version = var.kyverno_version
+}
+
+# Crossplane
+
+module "crossplane" {
+  source = "../../modules//crossplane"
+
+  chart_version = var.crossplane_version
+}
+
 
 # Now we setup the team-specific resources
 

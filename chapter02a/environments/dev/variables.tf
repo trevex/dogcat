@@ -25,3 +25,11 @@ variable "argo_cd_applications_repo_url" {
 variable "argo_cd_sync_policy_automated" {
   type = bool
 }
+
+variable "kyverno_version" {
+  type = string
+}
+
+variable "crossplane_version" {
+  type = string
+}

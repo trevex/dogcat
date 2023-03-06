@@ -5,3 +5,5 @@ artifact_repository_id        = "projects/nvoss-dogcat-chapter-02-shared/locatio
 shared_cluster_id             = "projects/nvoss-dogcat-chapter-02-shared/locations/europe-west1/clusters/cluster-shared"
 argo_cd_applications_repo_url = "https://github.com/trevex/test-applications.git"
 argo_cd_sync_policy_automated = true
+kyverno_version               = "v2.7.0" # chart-version
+crossplane_version            = "v1.9.1" # chart-version
