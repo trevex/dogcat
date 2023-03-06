@@ -33,3 +33,7 @@ variable "kyverno_version" {
 variable "crossplane_version" {
   type = string
 }
+
+variable "crossplane_provider_gcp_version" {
+  type = string
+}

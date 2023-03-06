@@ -241,7 +241,9 @@ module "kyverno" {
 module "crossplane" {
   source = "../../modules//crossplane"
 
-  chart_version = var.crossplane_version
+  chart_version        = var.crossplane_version
+  provider_gcp_version = var.crossplane_provider_gcp_version
+  project              = var.project
 }
 
 
