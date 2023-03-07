@@ -1,53 +1,47 @@
 {{- $region := .Values.region | required ".Values.region is required." -}}
 ---
-apiVersion: sql.cnrm.cloud.google.com/v1beta1
-kind: SQLInstance
+apiVersion: sql.gcp.upbound.io/v1beta1
+kind: DatabaseInstance
 metadata:
   name: {{ include "dogcat.fullname" . }}
   labels:
     {{- include "dogcat.labels" . | nindent 4 }}
-  {{- with .Values.cloudsql.deletionPolicy }}
-  annotations:
-    cnrm.cloud.google.com/deletion-policy: {{ . }}
-  {{- end }}
 spec:
-  databaseVersion: {{ .Values.cloudsql.databaseVersion }}
-  region: {{ $region }}
-  settings:
-    tier: {{ .Values.cloudsql.tier }}
-    availabilityType: {{ .Values.cloudsql.availabilityType }}
+  deletionPolicy: {{ .Values.cloudsql.deletionPolicy }}
+  forProvider:
+    databaseVersion: {{ .Values.cloudsql.databaseVersion }}
+    region: {{ $region }}
+    settings:
+    - tier: {{ .Values.cloudsql.tier }}
+      availabilityType: {{ .Values.cloudsql.availabilityType }}
+      diskSize: 10
+  writeConnectionSecretToRef:
+    name: {{ include "dogcat.fullname" . }}-cloudsql-conn
+    namespace: {{ .Release.Namespace }}
 ---
-apiVersion: sql.cnrm.cloud.google.com/v1beta1
-kind: SQLDatabase
+apiVersion: sql.gcp.upbound.io/v1beta1
+kind: Database
 metadata:
   name: {{ include "dogcat.fullname" . }}
   labels:
     {{- include "dogcat.labels" . | nindent 4 }}
-  {{- with .Values.cloudsql.deletionPolicy }}
-  annotations:
-    cnrm.cloud.google.com/deletion-policy: {{ . }}
-  {{- end }}
 spec:
-  charset: 'UTF8'
-  collation: 'en_US.UTF8'
-  instanceRef:
-    name: {{ include "dogcat.fullname" . }}
+  deletionPolicy: {{ .Values.cloudsql.deletionPolicy }}
+  forProvider:
+    charset: 'UTF8'
+    collation: 'en_US.UTF8'
+    instanceRef:
+      name: {{ include "dogcat.fullname" . }}
 ---
-apiVersion: sql.cnrm.cloud.google.com/v1beta1
-kind: SQLUser
-metadata:
+apiVersion: sql.gcp.upbound.io/v1beta1
+kind: User
   name: {{ include "dogcat.fullname" . }}
   labels:
     {{- include "dogcat.labels" . | nindent 4 }}
-  {{- with .Values.cloudsql.deletionPolicy }}
-  annotations:
-    cnrm.cloud.google.com/deletion-policy: {{ . }}
-  {{- end }}
 spec:
-  instanceRef:
-    name: {{ include "dogcat.fullname" . }}
-  password:
-    valueFrom:
-      secretKeyRef:
-        name: {{ include "dogcat.fullname" . }}
-        key: password
+  forProvider:
+    instanceRef:
+      name: {{ include "dogcat.fullname" . }}
+    passwordSecretRef:
+      name: {{ include "dogcat.fullname" . }}
+      key: password

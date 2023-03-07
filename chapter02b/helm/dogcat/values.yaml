@@ -18,7 +18,7 @@ project: ""
 region: ""
 
 cloudsql:
-  deletionPolicy: ""
+  deletionPolicy: "Delete"
   databaseVersion: POSTGRES_14
   availabilityType: ZONAL
   tier: db-f1-micro

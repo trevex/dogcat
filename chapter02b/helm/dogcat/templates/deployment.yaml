@@ -36,6 +36,12 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
+            - name: DB_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "dogcat.fullname" . }}-cloudsql-conn
+                  key: connectionName
+                  optional: false
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -47,7 +53,7 @@ spec:
             - --driver
             - postgres
             - --conn-str
-            - host={{ $project }}:{{ $region }}:{{ include "dogcat.fullname" . }} user={{ include "dogcat.fullname" . }} dbname={{ include "dogcat.fullname" . }} password=$(DB_PASSWORD) sslmode=disable
+            - host=$(DB_CONN) user={{ include "dogcat.fullname" . }} dbname={{ include "dogcat.fullname" . }} password=$(DB_PASSWORD) sslmode=disable
           ports:
             - name: http
               containerPort: 4000
