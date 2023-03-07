@@ -257,5 +257,5 @@ module "team" {
   project = var.project
   name    = each.value
 
-  depends_on = [module.cluster]
+  depends_on = [module.cluster, module.crossplane]
 }
