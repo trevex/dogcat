@@ -176,18 +176,6 @@ EOF
   depends_on = [google_project_iam_member.argo_cd_server, google_project_iam_member.argo_cd_application_controller]
 }
 
-resource "kubernetes_namespace" "cluster_applications" {
-  provider = kubernetes.shared
-
-  metadata {
-    labels = {
-      cluster = module.cluster.name
-      env     = regexall(".*(dev|stage|prod).*", module.cluster.name)[0][0] // Let's get the suffix
-    }
-    name = module.cluster.name
-  }
-}
-
 resource "kubernetes_manifest" "cluster_applications" {
   provider = kubernetes.shared
 
@@ -200,7 +188,7 @@ resource "kubernetes_manifest" "cluster_applications" {
     }
     spec = {
       destination = { # App of apps is installed in shared cluster
-        namespace = kubernetes_namespace.cluster_applications.metadata[0].name
+        namespace = "argo-cd"
         server    = "https://kubernetes.default.svc"
       }
       project = "default" # NOTE: used for simplicity, but project separation should be considered for production use
