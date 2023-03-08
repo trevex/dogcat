@@ -23,10 +23,13 @@ resource "google_project_service" "services" {
     "compute.googleapis.com",
     "container.googleapis.com",
     "sqladmin.googleapis.com",
+    "dns.googleapis.com",
   ])
   project = var.project
   service = each.value
 }
+
+# The underlying network mainly for the cluster
 
 module "network" {
   source = "../../modules//network"
@@ -48,6 +51,19 @@ module "network" {
   depends_on = [google_project_service.services]
 }
 
+# DNS zone for this project
+
+module "dns_zone" {
+  source = "../../modules//dns-zone"
+
+  parent_project   = var.dns_project
+  parent_zone_name = var.dns_zone_name
+
+  name = "nvoss-demo-dogcat-dev"
+  fqdn = var.dns_dedicated_fqdn
+
+  depends_on = [google_project_service.services]
+}
 
 
 # Create GKE Autopilot cluster
@@ -214,6 +230,27 @@ resource "kubernetes_manifest" "cluster_applications" {
   }
 
   depends_on = [kubernetes_secret.cluster_registration]
+}
+
+# External DNS
+
+module "external_dns" {
+  source = "../../modules//external-dns"
+
+  project       = var.project
+  chart_version = var.external_dns_version
+  dns_zones     = [module.dns_zone.fqdn]
+}
+
+# Cert-Manager
+
+module "cert_manager" {
+  source = "../../modules//cert-manager"
+
+  project           = var.project
+  chart_version     = var.cert_manager_version
+  dns_zones         = [module.dns_zone.fqdn]
+  letsencrypt_email = var.letsencrypt_email
 }
 
 # Kyverno

@@ -1,10 +1,16 @@
 project                         = "nvoss-dogcat-chapter-02-dev"
 region                          = "europe-west1"
 teams                           = ["dogcat"]
+dns_project                     = "nvoss-demo-dns"
+dns_zone_name                   = "nvoss-demo"
+dns_dedicated_fqdn              = "dev.dogcat.nvoss.demo.altostrat.com."
 artifact_repository_id          = "projects/nvoss-dogcat-chapter-02-shared/locations/europe-west1/repositories/images"
 shared_cluster_id               = "projects/nvoss-dogcat-chapter-02-shared/locations/europe-west1/clusters/cluster-shared"
 argo_cd_applications_repo_url   = "https://github.com/trevex/test-applications.git"
 argo_cd_sync_policy_automated   = true
-kyverno_version                 = "v2.7.0" # chart-version
+letsencrypt_email               = "nvoss@google.com"
+external_dns_version            = "v6.14.0" # chart-version
+cert_manager_version            = "v1.11.0" # chart-version
+kyverno_version                 = "v2.7.0"  # chart-version
 crossplane_version              = "v1.11.1"
 crossplane_provider_gcp_version = "v0.26.0"
