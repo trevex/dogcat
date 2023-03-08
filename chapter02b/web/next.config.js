@@ -2,7 +2,6 @@
 const nextConfig = {
     trailingSlash: true,
     reactStrictMode: true,
-    swcMinify: true,
     experimental: {
         images: {
             unoptimized: true,
