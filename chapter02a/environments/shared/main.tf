@@ -201,6 +201,7 @@ module "tekton" {
   project           = var.project
   pipeline_version  = var.tekton_pipeline_version
   triggers_version  = var.tekton_triggers_version
+  chains_version    = var.tekton_chains_version
   dashboard_version = var.tekton_dashboard_version
   dashboard_domain  = var.tekton_dashboard_domain
   iap_brand         = google_iap_brand.dogcat.name

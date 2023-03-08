@@ -113,8 +113,6 @@ provider "kubernetes" {
   ]
 }
 
-# And we register this cluster declaratively with ArgoCD
-
 provider "helm" {
   kubernetes {
     host                   = module.cluster.host
@@ -122,6 +120,8 @@ provider "helm" {
     cluster_ca_certificate = module.cluster.cluster_ca_certificate
   }
 }
+
+# And we register this cluster declaratively with ArgoCD
 
 locals {
   shared_cluster_splits = split("/", var.shared_cluster_id)

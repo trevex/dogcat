@@ -22,6 +22,10 @@ variable "tekton_triggers_version" {
   type = string
 }
 
+variable "tekton_chains_version" {
+  type = string
+}
+
 variable "tekton_dashboard_version" {
   type = string
 }

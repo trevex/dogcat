@@ -34,6 +34,26 @@ module "tekton_dashboard" {
   depends_on = [module.tekton_pipeline, module.tekton_triggers]
 }
 
+// We need to fetch tekton-chains separately and apply a patch.
+data "http" "tekton_chain_manifests" {
+  url = "https://storage.googleapis.com/tekton-releases/chains/previous/${var.chains_version}/release.yaml"
+  request_headers = {
+    Accept = "text/plain"
+    // https://github.com/hashicorp/terraform-provider-http/pull/158
+    // will fix warnings, if accepted mime type is ignored...
+  }
+}
+
+module "tekton_chains" {
+  source = "..//helm-manifests"
+
+  name = "tekton-chains"
+  # https://issuetracker.google.com/issues/227162588
+  manifests = replace(tostring(data.http.tekton_chain_manifests.response_body), "/safe-to-evict: \"false\"/", "safe-to-evict: \"true\"")
+
+  depends_on = [module.tekton_pipeline, module.tekton_triggers]
+}
+
 # Let's expose the dashboard, but protected via IAP
 
 module "tekton_dashboard_iap_service" {

@@ -15,6 +15,10 @@ variable "dashboard_version" {
   type = string
 }
 
+variable "chains_version" {
+  type = string
+}
+
 variable "dashboard_domain" {
   type = string
 }

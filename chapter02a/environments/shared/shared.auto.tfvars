@@ -8,6 +8,7 @@ iap_support_email             = "admin@nvoss.altostrat.com"
 letsencrypt_email             = "nvoss@google.com"
 tekton_pipeline_version       = "v0.45.0"
 tekton_triggers_version       = "v0.22.2"
+tekton_chains_version         = "v0.14.0"
 tekton_dashboard_version      = "v0.33.0"
 tekton_dashboard_domain       = "tekton.shared.dogcat.nvoss.demo.altostrat.com"
 external_dns_version          = "v6.14.0" # chart-version
