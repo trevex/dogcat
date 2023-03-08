@@ -8,7 +8,7 @@ ingress:
   hosts:
     - host: dogcat.dev.dogcat.nvoss.demo.altostrat.com
       paths:
-        - path: /
+        - path: /*
           pathType: ImplementationSpecific
   tls:
    - secretName: dogcat-tls
