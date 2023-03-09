@@ -1,11 +1,19 @@
-project                       = "nvoss-dogcat-chapter-02-shared"
-region                        = "europe-west1"
-dns_project                   = "nvoss-demo-dns"
-dns_zone_name                 = "nvoss-demo"
-dns_dedicated_fqdn            = "shared.dogcat.nvoss.demo.altostrat.com."
-iap_access_domain             = "nvoss.altostrat.com"
-iap_support_email             = "admin@nvoss.altostrat.com"
-letsencrypt_email             = "nvoss@google.com"
+# The project you created: "${PROJECT_BASENAME}-shared":
+project = "nvoss-dogcat-chapter02-shared"
+# The region you are working in "${REGION}":
+region = "europe-west3"
+# The cluster will also manage a DNS-zone, so a pre-existing DNS-zone managed
+# by Google Cloud is required (as described in the prerequisites).
+# The project-name, zone-name and desired fqdn for dedidcated zone are required:
+dns_project        = "nvoss-demo-dns"
+dns_zone_name      = "nvoss-demo"
+dns_dedicated_fqdn = "shared.dogcat.nvoss.demo.altostrat.com."
+# We protect our platform-services with IAP, so specify a fitting
+# trusted domain and support email for the OAuth-Client.
+iap_access_domain = "nvoss.altostrat.com"
+iap_support_email = "admin@nvoss.altostrat.com"
+letsencrypt_email = "nvoss@google.com"
+
 tekton_pipeline_version       = "v0.45.0"
 tekton_triggers_version       = "v0.22.2"
 tekton_chains_version         = "v0.14.0"

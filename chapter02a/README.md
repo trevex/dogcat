@@ -1,11 +1,109 @@
-# cd chapter02a
+Prerequisites:
+
+```bash
+gcloud (includes gsutil)
+terraform
+kubectl
+base64
+```
+
+- Another Google-Project with a working public DNS-zone!
+
+```bash
+cd chapter02a
+export PROJECT_BASENAME="nvoss-dogcat-chapter02"
+export REGION="europe-west3"
+gcloud projects create ${PROJECT_BASENAME}-shared --labels=environment=shared
+gcloud projects create ${PROJECT_BASENAME}-dev --labels=environment=dev
+gcloud projects create ${PROJECT_BASENAME}-stg --labels=environment=stg
+gcloud projects create ${PROJECT_BASENAME}-prd --labels=environment=prd
+
+# Produces output as follows (will take a minute):
+Create in progress for [https://cloudresourcemanager.googleapis.com/v1/projects/nvoss-dogcat-chapter02-shared].
+Waiting for [operations/cp.5589693136193213439] to finish...done.
+Enabling service [cloudapis.googleapis.com] on project [nvoss-dogcat-chapter02-shared]...
+[...]
+```
+
+Before continuing check if the correct billing account is attached to the projects
+you just created.
+https://cloud.google.com/billing/docs/how-to/modify-project
+
+If the billing account is correctly attached, we can start creating resources.
+We need a bucket to store the terraform state before we can provision resources
+with terraform:
+
+```bash
+gsutil mb -p ${PROJECT_BASENAME}-shared -l ${REGION} -b on gs://${PROJECT_BASENAME}-tf-state
+gsutil versioning set on gs://${PROJECT_BASENAME}-tf-state
+# Make sure terraform is able to use your credentials (only required if not already the case)
+gcloud auth application-default login --project ${PROJECT_BASENAME}-shared
+```
+
+There terraform code will try to use the currently configured backend, which
+will not use your bucket, so we first have to update those.
+
+You can either open all `environments/*/main.tf`-files and update the bucket-name
+referenced in the backend-definition at the top of the file or use a command such as
+(requires `ripgrep`, `xargs`, `sed`):
+
+```bash
+rg -l 'backend "gcs"' | xargs -I{} sed -i "s/nvoss-dogcat-chapter02-tf-state/${PROJECT_BASENAME}-tf-state/g" {}
+```
+
+Next you will have to update the terraform variables, that are set.
+Open each `environments/*/*.auto.tfvars`-file and update the variables
+to match your projects, region and DNS-settings.
+The comments in the files may assist you.
+
+Now let's start with the shared-cluster, which is were most of the tools
+of the internal developer platform are hosted.
+First we do a targeted rollout to provision our GKE cluster:
+```bash
+terraform -chdir=environments/shared apply -target="module.cluster"
+```
+
+## Argolis / Org-Policies
+
+GKE Autopilot clusters require serial port logging to be effectively debugged.
+Check the documentation for more information:
+https://cloud.google.com/kubernetes-engine/docs/troubleshooting/troubleshooting-autopilot-clusters#scale-up-failed-serial-port-logging
+Make sure the organization policy is not enforced:
+
+```
+for ENV in shared dev stg prd; do
+  gcloud services enable --project ${PROJECT_BASENAME}-${ENV} orgpolicy.googleapis.com
+  gcloud beta resource-manager org-policies disable-enforce compute.disableSerialPortLogging --project=${PROJECT_BASENAME}-${ENV}
+  gcloud compute project-info add-metadata --project=${PROJECT_BASENAME}-${ENV} --metadata serial-port-logging-enable=true
+done
+```
+
+
+To connect to the cluster (with the new authentication plugin) run:
+```bash
+export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+gcloud container clusters get-credentials cluster-shared --region ${REGION} --project ${PROJECT_BASENAME}-shared
+```
+
+In the cluster there is currently not much running, but this is about to change.
+Apply the terraform-code once more to deploy everything you need to continue with ArgoCD:
+```bash
+terraform -chdir=environments/shared apply
+```
+
+
+
+
+
+
+
 
 # Code heavy so make sure to also look at the code and its comments
 
 ### Argolis users only
 `export SHARED_PROJECT="nvoss-dogcat-chapter-02-shared"`
 ```bash
-$ gcloud services enable --project $SHARED_PROJECT orgpolicy.googleapis.com
+$ gcloud services enable --project ${PROJECT_BASENAME}-shared orgpolicy.googleapis.com
 Operation "operations/xxx.xxxxxxxxxx" finished successfully.
 $ gcloud beta resource-manager org-policies disable-enforce iam.disableServiceAccountKeyCreation --project=$SHARED_PROJECT
 booleanPolicy: {}

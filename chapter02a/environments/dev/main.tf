@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "nvoss-dogcat-chapter-02-tf-state"
+    bucket = "nvoss-dogcat-chapter02-tf-state"
     prefix = "terraform/dev"
   }
 }
@@ -75,7 +75,7 @@ module "cluster" {
   project                = var.project
   region                 = var.region
   network_id             = module.network.id
-  subnetwork_id          = module.network.subnetworks["network-dev-main-europe-west1"].id
+  subnetwork_id          = module.network.subnetworks["network-dev-main-${var.region}"].id
   master_ipv4_cidr_block = "172.16.0.0/28"
 
   depends_on = [google_project_service.services]

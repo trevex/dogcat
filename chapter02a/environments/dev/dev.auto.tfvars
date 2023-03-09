@@ -13,4 +13,4 @@ external_dns_version            = "v6.14.0" # chart-version
 cert_manager_version            = "v1.11.0" # chart-version
 kyverno_version                 = "v2.7.0"  # chart-version
 crossplane_version              = "v1.11.1"
-crossplane_provider_gcp_version = "v0.26.0"
+crossplane_provider_gcp_version = "v0.28.0"
