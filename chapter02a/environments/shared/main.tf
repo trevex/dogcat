@@ -194,296 +194,106 @@ resource "google_artifact_registry_repository_iam_member" "argo_cd_ar_reader" {
   member = "serviceAccount:${module.argo_cd.image_updater_service_account_email}"
 }
 
-# module "argo_cd_platform" {
-#   # We intentionally do not use `kubernetes_manifest` to as it will not
-#   # successfully plan until ArgoCD is installed.
-#   source = "../../modules//helm-manifests"
+# # We use the apps of apps pattern, so we need to register our applications repository:
 
-#   name      = "tekton-application-pipelines"
-#   manifests = <<EOF
-# apiVersion: argoproj.io/v1alpha1
-# kind: AppProject
-# metadata:
-#   name: ${module.cluster.name}
-#   namespace: argo-cd
-# spec:
-#   description: System-level cluster configurations
-#   sourceRepos:
-#     - ${var.argo_cd_applications_repo_url}
-#   destinations:
-#     - namespace: "*"
-#       server: "https://kubernetes.default.svc"
-#   clusterResourceWhitelist:
-#     - group: "*"
-#       kind: "*"
-# ---
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: ${module.cluster.name}-apps
-#   namespace: argo-cd
-# spec:
-#   destination:
-#     namespace: argo-cd
-#     server: "https://kubernetes.default.svc"
-#   project: ${module.cluster.name}
-#   source:
-#     path: "tekton"
-#     repoURL: ${var.argo_cd_applications_repo_url}
-#     targetRevision: HEAD
-#   syncPolicy:
-#     automated: {}
-# EOF
+resource "kubernetes_secret" "argo_cd_applications" {
+  metadata {
+    name      = "argo-cd-applications"
+    namespace = "argo-cd"
+    labels = {
+      "argocd.argoproj.io/secret-type" = "repository"
+    }
+  }
+  data = {
+    type = "git"
+    url  = var.argo_cd_applications_repo_url
+  }
 
-#   depends_on = [module.argo_cd]
-# }
+  depends_on = [module.argo_cd]
+}
+
+module "argo_cd_platform" {
+  # We intentionally do not use `kubernetes_manifest` to as it will not
+  # successfully plan until ArgoCD is installed.
+  source = "../../modules//helm-manifests"
+
+  name      = "argo-cd-${module.cluster.name}"
+  manifests = <<EOF
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: ${module.cluster.name}
+  namespace: argo-cd
+spec:
+  description: Project for shared cluster system components
+  sourceRepos:
+    - ${var.argo_cd_applications_repo_url}
+  destinations:
+    - namespace: "*"
+      server: "https://kubernetes.default.svc"
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+EOF
+
+  depends_on = [module.argo_cd]
+}
 
 
 # # Tekton
 
-# module "tekton" {
-#   source = "../../modules//tekton"
+module "tekton" {
+  source = "../../modules//tekton"
 
-#   project           = var.project
-#   pipeline_version  = var.tekton_pipeline_version
-#   triggers_version  = var.tekton_triggers_version
-#   chains_version    = var.tekton_chains_version
-#   dashboard_version = var.tekton_dashboard_version
-#   dashboard_domain  = var.tekton_dashboard_domain
-#   iap_brand         = google_iap_brand.dogcat.name
+  project           = var.project
+  pipeline_version  = var.tekton_pipeline_version
+  triggers_version  = var.tekton_triggers_version
+  chains_version    = var.tekton_chains_version
+  dashboard_version = var.tekton_dashboard_version
+  dashboard_domain  = var.tekton_dashboard_domain
+  iap_brand         = google_iap_brand.dogcat.name
 
-#   depends_on = [module.cert_manager, module.argo_cd]
-# }
+  depends_on = [module.cert_manager, module.argo_cd]
+}
 
-# # We use the apps of apps pattern, so we need to register our applications repository:
 
-# resource "kubernetes_secret" "argo_cd_applications" {
-#   metadata {
-#     name      = "argo-cd-applications"
-#     namespace = "argo-cd"
-#     labels = {
-#       "argocd.argoproj.io/secret-type" = "repository"
-#     }
-#   }
-#   data = {
-#     type = "git"
-#     url  = var.argo_cd_applications_repo_url
-#   }
+# We also use ArgoCD to deploy Tekton Pipelines for our applications:
 
-#   depends_on = [module.argo_cd]
-# }
+module "tekton_application_pipelines" {
+  # We intentionally do not use `kubernetes_manifest` to as it will not
+  # successfully plan until ArgoCD is installed.
+  source = "../../modules//helm-manifests"
 
-# # We also use ArgoCD to deploy Tekton Pipelines for our applications:
+  name      = "tekton-application-pipelines"
+  manifests = <<EOF
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tekton-application-pipelines
+  namespace: argo-cd
+spec:
+  destination:
+    namespace: tekton
+    server: "https://kubernetes.default.svc"
+  project: ${module.cluster.name}
+  source:
+    path: "tekton"
+    repoURL: ${var.argo_cd_applications_repo_url}
+    targetRevision: HEAD
+  syncPolicy:
+    automated: {}
+ EOF
 
-# module "tekton_application_pipelines" {
-#   # We intentionally do not use `kubernetes_manifest` to as it will not
-#   # successfully plan until ArgoCD is installed.
-#   source = "../../modules//helm-manifests"
+  depends_on = [module.tekton, module.argo_cd_platform]
+}
 
-#   name      = "tekton-application-pipelines"
-#   manifests = <<EOF
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: tekton-application-pipelines
-#   namespace: argo-cd
-# spec:
-#   destination:
-#     namespace: tekton
-#     server: "https://kubernetes.default.svc"
-#   project: default
-#   source:
-#     path: "tekton"
-#     repoURL: ${var.argo_cd_applications_repo_url}
-#     targetRevision: HEAD
-#   syncPolicy:
-#     automated: {}
-# EOF
+# Let's configure a tekton trigger, that can schedule PipelineRuns
 
-#   depends_on = [module.tekton]
-# }
+module "tekton_trigger" {
+  source = "../../modules//tekton-trigger"
 
-# # Let's configure a tekton trigger, that can schedule PipelineRuns
+  trigger_domain = "trigger.${var.tekton_dashboard_domain}"
 
-# resource "random_password" "tekton_trigger_secret" {
-#   length  = 64
-#   special = true
-# }
+  depends_on = [module.tekton]
+}
 
-# module "tekton_triggers" {
-#   # We intentionally do not use `kubernetes_manifest` to as it will not
-#   # successfully plan until Tekton is installed.
-#   # This can be avoided by using tools such as terragrunt or terramate
-#   # in a non-demo setup.
-#   source = "../../modules//helm-manifests"
-
-#   name      = "tekton-triggers"
-#   namespace = "tekton"
-#   manifests = <<EOF
-# apiVersion: v1
-# kind: Secret
-# metadata:
-#   name: tekton-trigger-secret
-# type: Opaque
-# stringData:
-#   shared-secret: "${random_password.tekton_trigger_secret.result}"
-# ---
-# apiVersion: v1
-# kind: ServiceAccount
-# metadata:
-#   name: tekton-triggers
-# ---
-# apiVersion: rbac.authorization.k8s.io/v1
-# kind: RoleBinding
-# metadata:
-#   name: tekton-triggers-eventlistener-binding
-# subjects:
-#   - kind: ServiceAccount
-#     name: tekton-triggers
-# roleRef:
-#   apiGroup: rbac.authorization.k8s.io
-#   kind: ClusterRole
-#   name: tekton-triggers-eventlistener-roles
-# ---
-# apiVersion: rbac.authorization.k8s.io/v1
-# kind: ClusterRoleBinding
-# metadata:
-#   name: tekton-triggers-eventlistener-clusterbinding
-# subjects:
-#   - kind: ServiceAccount
-#     name: tekton-triggers
-#     namespace: tekton
-# roleRef:
-#   apiGroup: rbac.authorization.k8s.io
-#   kind: ClusterRole
-#   name: tekton-triggers-eventlistener-clusterroles
-# ---
-# apiVersion: triggers.tekton.dev/v1beta1
-# kind: EventListener
-# metadata:
-#   name: github-listener
-# spec:
-#   serviceAccountName: tekton-triggers
-#   triggers:
-#     - name: github-listener
-#       interceptors:
-#         - ref:
-#             name: "github"
-#           params:
-#             - name: "secretRef"
-#               value:
-#                 secretName: tekton-trigger-secret
-#                 secretKey: shared-secret
-#             - name: "eventTypes"
-#               value: [ "push" ]
-#         - ref:
-#             name: "cel"
-#           params:
-#           - name: "overlays"
-#             value:
-#             - key: image_tag
-#               expression: "body.ref.startsWith('refs/tags/') ? body.ref.split('/')[2] : body.head_commit.id"
-#       bindings:
-#         - ref: github-binding
-#       template:
-#         ref: github-template
-# ---
-# apiVersion: triggers.tekton.dev/v1beta1
-# kind: TriggerBinding
-# metadata:
-#   name: github-binding
-# spec:
-#   params:
-#     - name: repoName
-#       value: $(body.repository.name)
-#     - name: repoRevision
-#       value: $(body.head_commit.id)
-#     - name: repoURL
-#       value: git@github.com:NucleusEngineering/$(body.repository.name).git
-#     - name: image
-#       value: europe-west1-docker.pkg.dev/nvoss-dogcat-chapter-02-shared/images/$(body.repository.name):$(extensions.image_tag)
-# ---
-# apiVersion: triggers.tekton.dev/v1beta1
-# kind: TriggerTemplate
-# metadata:
-#   name: github-template
-# spec:
-#   params:
-#     - name: repoName
-#     - name: repoRevision
-#     - name: repoURL
-#     - name: image
-#   resourcetemplates:
-#     - apiVersion: tekton.dev/v1beta1
-#       kind: PipelineRun
-#       metadata:
-#         generateName: $(tt.params.repoName)-run-
-#       spec:
-#         serviceAccountName: tekton
-#         pipelineRef:
-#           name: $(tt.params.repoName)
-#         params:
-#           - name: repoRevision
-#             value: $(tt.params.repoRevision)
-#           - name: repoURL
-#             value: $(tt.params.repoURL)
-#           - name: image
-#             value: $(tt.params.image)
-#         podTemplate:
-#           securityContext:
-#             fsGroup: 65532
-#           nodeSelector:
-#             cloud.google.com/gke-spot: "true"
-#         workspaces:
-#         - name: shared-data
-#           volumeClaimTemplate:
-#             spec:
-#               accessModes:
-#               - ReadWriteOnce
-#               resources:
-#                 requests:
-#                   storage: 4Gi
-# EOF
-
-#   depends_on = [module.tekton]
-# }
-
-# locals {
-#   tekton_trigger_domain = "trigger.${var.tekton_dashboard_domain}"
-# }
-
-# resource "kubernetes_ingress_v1" "tekton_trigger" {
-#   metadata {
-#     name      = "tekton-trigger"
-#     namespace = "tekton"
-#     annotations = {
-#       "cert-manager.io/cluster-issuer" = "letsencrypt"
-#     }
-#   }
-
-#   spec {
-#     rule {
-#       host = local.tekton_trigger_domain
-#       http {
-#         path {
-#           path = "/*"
-#           backend {
-#             service {
-#               name = "el-github-listener"
-#               port {
-#                 number = 8080
-#               }
-#             }
-#           }
-#         }
-#       }
-#     }
-
-#     tls {
-#       hosts       = [local.tekton_trigger_domain]
-#       secret_name = "tekton-trigger-tls"
-#     }
-#   }
-
-#   depends_on = [module.tekton_triggers]
-# }

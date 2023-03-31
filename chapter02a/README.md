@@ -1,14 +1,43 @@
-Prerequisites:
+# Chapter 2A (alias `chapter02a`)
 
+In this chapter we change perspective and set up the internal developer platform
+and processes as provided by the Platform-Team.
+
+
+## Prerequisites
+
+You will need the following CLI tools installed and available:
 ```bash
 gcloud (includes gsutil)
 terraform
 kubectl
 base64
 ```
+__NOTE__: The above tools are assumed to be GNU-variants if applicable.
 
-- Another Google-Project with a working public DNS-zone!
+This guide does not go into detail how to set up a public domain. 
+A public domain has to be set up with its zone configured in another Google Cloud project.
+The sub-zone will be created for each cluster/project.
 
+The internal platform services, such as ArgoCD and Tekton, will be hosted under sub-domains of this public domain,
+but will be protected by an Identity-Aware Proxy (IAP), which will restrict access to the domain of the organization.
+
+## Fork `dogcat-applications`
+
+__TODO__
+
+
+## Projects
+
+Before we start we need four projects:
+1. One project that is referred to as `shared`-project containing CI/CD and other central services.
+2. A project for the development environment (`dev`)
+3. A project for the staging environment (`stg`)
+4. Finally a project for the production environment (`prd`)
+
+__TODO__: insert diagram
+
+You can create the projects using the CLI. Adapt your `PROJECT_BASENAME` and `REGION` as required:
 ```bash
 cd chapter02a
 export PROJECT_BASENAME="nvoss-dogcat-chapter02"
@@ -25,14 +54,19 @@ Enabling service [cloudapis.googleapis.com] on project [nvoss-dogcat-chapter02-s
 [...]
 ```
 
-Before continuing check if the correct billing account is attached to the projects
-you just created.
-https://cloud.google.com/billing/docs/how-to/modify-project
+Before continuing [check if the correct billing account is attached](https://cloud.google.com/billing/docs/how-to/modify-project)
+to the projects you just created.
 
 If the billing account is correctly attached, we can start creating resources.
-We need a bucket to store the terraform state before we can provision resources
-with terraform:
 
+
+## Bucket for `terraform` state
+
+We want to use remote state with terraform. We need a GCS-Bucket for this.
+GCS supports atomic operations and therefore the bucket will both act as lock
+as well as state backend.
+
+Using the variables defined above, you can create the bucket as follows:
 ```bash
 gsutil mb -p ${PROJECT_BASENAME}-shared -l ${REGION} -b on gs://${PROJECT_BASENAME}-tf-state
 gsutil versioning set on gs://${PROJECT_BASENAME}-tf-state
@@ -40,13 +74,14 @@ gsutil versioning set on gs://${PROJECT_BASENAME}-tf-state
 gcloud auth application-default login --project ${PROJECT_BASENAME}-shared
 ```
 
-There terraform code will try to use the currently configured backend, which
-will not use your bucket, so we first have to update those.
 
-You can either open all `environments/*/main.tf`-files and update the bucket-name
-referenced in the backend-definition at the top of the file or use a command such as
-(requires `ripgrep`, `xargs`, `sed`):
+## Update `terraform` code
 
+Some values can not be variables in `terraform` such as values used in backend
+configurations, so we have to update them by other means.
+
+You can either open all `environments/*/main.tf`-files and update the name of the bucket
+to match the bucket created earlier or use a command such as (requires `ripgrep`, GNU-`xargs`, GNU-`sed`):
 ```bash
 rg -l 'backend "gcs"' | xargs -I{} sed -i "s/nvoss-dogcat-chapter02-tf-state/${PROJECT_BASENAME}-tf-state/g" {}
 ```
@@ -56,21 +91,24 @@ Open each `environments/*/*.auto.tfvars`-file and update the variables
 to match your projects, region and DNS-settings.
 The comments in the files may assist you.
 
-Now let's start with the shared-cluster, which is were most of the tools
+
+## Roll out the first cluster
+
+Now let's start with the `shared`-cluster, which is were most of the tools
 of the internal developer platform are hosted.
 First we do a targeted rollout to provision our GKE cluster:
 ```bash
 terraform -chdir=environments/shared apply -target="module.cluster"
 ```
 
-## Argolis / Org-Policies
+__NOTE__: If you want to get a better of what is happening in the code, it is recommended to read the code as it was heavily commented for this purpose.
 
-GKE Autopilot clusters require serial port logging to be effectively debugged.
-Check the documentation for more information:
-https://cloud.google.com/kubernetes-engine/docs/troubleshooting/troubleshooting-autopilot-clusters#scale-up-failed-serial-port-logging
-Make sure the organization policy is not enforced:
 
-```
+## Org-Policies (optional)
+
+GKE Autopilot clusters require serial port logging to be effectively debugged, check the [documentation for details](https://cloud.google.com/kubernetes-engine/docs/troubleshooting/troubleshooting-autopilot-clusters#scale-up-failed-serial-port-logging).
+If your organization uses organizational policies, you might have to make sure it is not enforced in those projects:
+```bash
 for ENV in shared dev stg prd; do
   gcloud services enable --project ${PROJECT_BASENAME}-${ENV} orgpolicy.googleapis.com
   gcloud beta resource-manager org-policies disable-enforce compute.disableSerialPortLogging --project=${PROJECT_BASENAME}-${ENV}
@@ -79,103 +117,73 @@ done
 ```
 
 
+## Connecting to the cluster
 To connect to the cluster (with the new authentication plugin) run:
 ```bash
 export USE_GKE_GCLOUD_AUTH_PLUGIN=True
 gcloud container clusters get-credentials cluster-shared --region ${REGION} --project ${PROJECT_BASENAME}-shared
 ```
 
+
+## Rollout platform services 
+
 In the cluster there is currently not much running, but this is about to change.
-Apply the terraform-code once more to deploy everything you need to continue with ArgoCD:
+Apply the `terraform` code once more without a target to deploy everything you need to continue with ArgoCD and Tekton:
 ```bash
 terraform -chdir=environments/shared apply
 ```
 
+## Accessing ArgoCD UI and Tekton Dashboard
 
+The platform services are rolled out, but it might still take a while until
+the changes are properly reconciled in your Kubernetes-cluster.
+`cert-manager` will create the TLS-certificate for the Load-Balancers and 
+`external-dns` will set up the DNS records for the services.
 
-
-
-
-
-
-# Code heavy so make sure to also look at the code and its comments
-
-### Argolis users only
-`export SHARED_PROJECT="nvoss-dogcat-chapter-02-shared"`
+You can watch the events happening in your cluster with:
 ```bash
-$ gcloud services enable --project ${PROJECT_BASENAME}-shared orgpolicy.googleapis.com
-Operation "operations/xxx.xxxxxxxxxx" finished successfully.
-$ gcloud beta resource-manager org-policies disable-enforce iam.disableServiceAccountKeyCreation --project=$SHARED_PROJECT
-booleanPolicy: {}
-constraint: constraints/iam.disableServiceAccountKeyCreation
-[...]
+kubectl get events --all-namespaces -w
 ```
 
-# Create the four projects!!!
+If you are impatient you can also port-forward the services, but once the dust settles 
+the services will be available under the in terraform configured domains protected by IAP.
 
+When you access ArgoCD it will ask you to login.
+You can use the inbuilt initial admin user, which for the purpose of this demo, we will keep using.
+
+You can retrieve the password for the user `admin` as follows:
 ```bash
-gsutil mb -p nvoss-dogcat-chapter-02-shared -l europe-west1 -b on gs://nvoss-dogcat-chapter-02-tf-state
-gsutil versioning set on gs://nvoss-dogcat-chapter-02-tf-state
-gcloud auth application-default login
-terraform -chdir=environments/shared init 
-terraform -chdir=environments/shared apply # explain everything that is created!
-
 kubectl get secrets -n argo-cd argocd-initial-admin-secret --template={{.data.password}} | base64 --decode
-terraform -chdir=environments/shared output tekton_trigger_secret # or k8s secret?...
 ```
 
-```
-git remote add applications ssh://admin@nvoss.altostrat.com@source.developers.google.com:2022/p/nvoss-dogcat-chapter-02-shared/r/argo-cd-applications
-git push applications main:master # still uses master as head and head is required to test :|
-```
-INSTEAD
-fork `dogcat-applications` as public repo to simplify demo!
+In the ArgoCD UI you should already see an application that deploys shared tekton tasks to the cluster.
+
+__TODO__: Add some screenshots
+
+The tekton dashboard is a read-only view and does not require authentication other than required by the IAP.
+
+__TODO__: Add some screenshots
+
+There are already some tekton resources that were created by terraform and ArgoCD.
+Terraform configured an event listener that we will use with our Github repository and
+ArgoCD already went ahead and deployed some shared tekton tasks from our `dogcat-applications` repository.
 
 
-Alt: use https://github.com/marketplace/google-cloud-build instead of source repo
-==> https://cloud.google.com/architecture/managing-infrastructure-as-code
+__TODO__: Other clusters...
+__TODO__: Policies
 
+## Retrospective
 
-export USE_GKE_GCLOUD_AUTH_PLUGIN=True
-gcloud container clusters get-credentials cluster-shared --region europe-west1 --project nvoss-dogcat-chapter-02-shared
+- Team pushed terraform to the limits in regards to managing kubernetes resources and should consider moving as much as possible to ArgoCD
+- Terraform modules are not using git references
+- While the team is implementing some policing, it can make since to audit the state, there are some additional OSS tools that might accomodate their needs: https://forsetisecurity.org/ https://cloudcustodian.io/ https://www.cloudquery.io/ or alternatively asset inventory
+- GKE clusters would be more secure with private control-plane
+- Backstage would be a nice addition not covered
+- ArgoCD permissions should be limited
 
+## Addendum
 
-# TODO
+- Using Argo CD and Tekton with private repositories
+- Terraform CI/CD is omitted to keep the demo simple, but https://cloud.google.com/docs/terraform/resource-management/managing-infrastructure-as-code can be used as starting point, consider also using dagger and leverage tflint, tfsec and checkov.
+- ConfigConnector or ConfigController can be simpler way to get starting managing Google Cloud resources from within Kubernetes
 
-Terraform CI/CD omitted but reference: https://cloud.google.com/architecture/managing-infrastructure-as-code
-And tools such as tfsec, tflint and checkov 
-
-Teraform should use two branches:
-develop => straigth to dev
-main => straight to stage, approval for prod and shared (mention no dev setup for shared in retro!)
-
-use gates for shared and prod: https://cloud.google.com/build/docs/securing-builds/gate-builds-on-approval#:~:text=Approving%20builds,-Console%20gcloud&text=Open%20the%20Cloud%20Build%20Dashboard%20page%20in%20the%20Google%20Cloud%20console.&text=If%20you%20have%20builds%20to,of%20builds%20awaiting%20your%20approval.
-
-
-TODO https://cloud.google.com/anthos-config-management/docs/concepts/policy-controller
-
-TODO split up code to make it more readable
-
-# Retro:
-
-Team is using a very liberal approach as they do not believe in gatekeeping, but have yet to implement some policing and auditing outside of GKE.
-They are planning to adopt a tool to help here and are currently looking into some OSS:
-https://forsetisecurity.org/
-https://cloudcustodian.io/
-https://www.cloudquery.io/
-
-Daniel: policy troubleshooter, asset inventory, iam recommender
-
-Team pushed terraform to its max and feels like they have to introduce new tool, e.g. kubectl not optimal
-Terraform not using git refs for modules ==> split?
-Config Controller VS Config Connector
-
-GKE should be private but needs also private cloud build etc
-
-Kpt and backstage UI mention looks promising
-
-ArgoCD permission in-cluster should be limited
-
-# FUTURE:
-
- alternative to chapter02b https://cloud.google.com/kubernetes-engine/docs/tutorials/gitops-cloud-build
