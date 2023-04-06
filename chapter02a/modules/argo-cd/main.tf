@@ -23,6 +23,20 @@ module "argo_cd_application_controller_wi" {
   namespace = kubernetes_namespace.argo_cd.metadata[0].name
 }
 
+module "argo_cd_repo_server_wi" {
+  source = "..//workload-identity"
+
+  project   = var.project
+  name      = "argo-cd-repo-server"
+  namespace = kubernetes_namespace.argo_cd.metadata[0].name
+}
+
+resource "google_storage_bucket_iam_member" "charts_access" {
+  bucket = var.charts_bucket_name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${module.argo_cd_repo_server_wi.gcp_service_account_email}"
+}
+
 # Intentionally not HA as this is a demo, check for production configuration:
 # https://github.com/argoproj/argo-helm/tree/main/charts/argo-cd#high-availability
 resource "helm_release" "argo_cd" {
@@ -62,8 +76,12 @@ resource "helm_release" "argo_cd" {
     value = module.argo_cd_application_controller_wi.k8s_service_account_name
   }
   set {
+    name  = "repoServer.serviceAccount.create"
+    value = "false"
+  }
+  set {
     name  = "repoServer.serviceAccount.name"
-    value = "argocdreposerver" # TODO
+    value = module.argo_cd_repo_server_wi.k8s_service_account_name
   }
 
   # We also want to ignore some resources that are automatically created by other
@@ -87,7 +105,28 @@ configs:
         clusters:
           - "*"
 EOT
+    , <<EOT
+repoServer:
+  env:
+    - name: HELM_PLUGINS
+      value: /helm-working-dir/plugins/
+  initContainers:
+    - name: install-helm-plugins
+      image: alpine/helm:3.11.1
+      volumeMounts:
+        - mountPath: /helm-working-dir
+          name: helm-working-dir
+      env:
+        - name: HELM_PLUGINS
+          value: /helm-working-dir/plugins
+      command: ["/bin/sh", "-c"]
+      args:
+        - apk --no-cache add curl;
+          helm plugin install https://github.com/hayorov/helm-gcs.git --version 0.4.1;
+EOT
   ]
+
+  depends_on = [module.argo_cd_repo_server_wi, google_storage_bucket_iam_member.charts_access]
 }
 
 # Let's expose the ArgoCD server, but protected via IAP

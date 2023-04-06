@@ -9,3 +9,7 @@ variable "git_base_url" {
 variable "image_base" {
   type = string
 }
+
+variable "charts_bucket_name" {
+  type = string
+}

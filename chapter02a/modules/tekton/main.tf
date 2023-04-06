@@ -164,7 +164,7 @@ module "wi" {
   project   = var.project
   name      = "tekton"
   namespace = kubernetes_namespace.tekton.metadata[0].name
-  roles     = ["roles/artifactregistry.writer"] # NOTE: should be more fine-granular for production on per AR-level
+  roles     = ["roles/artifactregistry.writer", "roles/storage.admin"] # NOTE: should be more fine-granular for production on per AR-level
 }
 
 

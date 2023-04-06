@@ -303,9 +303,10 @@ spec:
 module "tekton_trigger" {
   source = "../../modules//tekton-trigger"
 
-  trigger_domain = "trigger.${var.tekton_dashboard_domain}"
-  image_base     = "${google_artifact_registry_repository.images.location}-docker.pkg.dev/${var.project}/${google_artifact_registry_repository.images.repository_id}"
-  git_base_url   = var.tekton_trigger_git_base_url
+  trigger_domain     = "trigger.${var.tekton_dashboard_domain}"
+  image_base         = "${google_artifact_registry_repository.images.location}-docker.pkg.dev/${var.project}/${google_artifact_registry_repository.images.repository_id}"
+  git_base_url       = var.tekton_trigger_git_base_url
+  charts_bucket_name = google_storage_bucket.charts.name
 
   depends_on = [module.tekton]
 }
