@@ -6,7 +6,7 @@ resource "kubernetes_namespace" "team" {
 
     labels = {
       team = var.name
-      env  = regexall(".*(dev|stage|prod).*", var.project)[0][0] // Let's get the suffix
+      env  = regexall(".*(dev|stg|prd).*", var.project)[0][0] // Let's get the suffix
     }
 
     name = var.name

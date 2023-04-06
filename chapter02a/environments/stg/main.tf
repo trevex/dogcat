@@ -1,7 +1,7 @@
 terraform {
   backend "gcs" {
     bucket = "nvoss-dogcat-chapter02-tf-state"
-    prefix = "terraform/dev"
+    prefix = "terraform/stg"
   }
 }
 
@@ -34,7 +34,7 @@ resource "google_project_service" "services" {
 module "network" {
   source = "../../modules//network"
 
-  name = "network-dev"
+  name = "network-stg"
   subnetworks = [{
     name_affix    = "main" # full name will be `${name}-${name_affix}-${region}`
     ip_cidr_range = "10.0.0.0/20"
@@ -59,7 +59,7 @@ module "dns_zone" {
   parent_project   = var.dns_project
   parent_zone_name = var.dns_zone_name
 
-  name = "nvoss-demo-dogcat-dev"
+  name = "nvoss-demo-dogcat-stg"
   fqdn = var.dns_dedicated_fqdn
 
   depends_on = [google_project_service.services]
@@ -71,11 +71,11 @@ module "dns_zone" {
 module "cluster" {
   source = "../../modules//cluster"
 
-  name                   = "cluster-dev"
+  name                   = "cluster-stg"
   project                = var.project
   region                 = var.region
   network_id             = module.network.id
-  subnetwork_id          = module.network.subnetworks["network-dev-main-${var.region}"].id
+  subnetwork_id          = module.network.subnetworks["network-stg-main-${var.region}"].id
   master_ipv4_cidr_block = "172.16.0.0/28"
 
   depends_on = [module.network]
@@ -242,7 +242,7 @@ resource "kubernetes_manifest" "cluster_applications" {
           releaseName = "${module.cluster.name}-applications"
           parameters = [{ # But we point our subsequent apps to our newly created cluster, by passing in helm-parameters
             name  = "environment"
-            value = "dev"
+            value = "stg"
             }, {
             name  = "destination.server"
             value = module.cluster.host

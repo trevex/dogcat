@@ -49,6 +49,16 @@ resource "google_artifact_registry_repository" "images" {
   depends_on = [google_project_service.services]
 }
 
+# We also need a bucket for our helm-charts
+
+resource "google_storage_bucket" "charts" {
+  name     = "${var.project}-charts"
+  location = "EU"
+
+  uniform_bucket_level_access = true
+  public_access_prevention    = "enforced"
+}
+
 
 # The underlying network mainly for the cluster
 
@@ -99,7 +109,7 @@ module "cluster" {
   subnetwork_id          = module.network.subnetworks["network-shared-main-${var.region}"].id
   master_ipv4_cidr_block = "172.16.0.0/28"
 
-  depends_on = [google_project_service.services]
+  depends_on = [module.network]
 }
 
 resource "google_artifact_registry_repository_iam_member" "cluster_ar_reader" {
@@ -181,6 +191,7 @@ module "argo_cd" {
   domain                       = var.argo_cd_domain
   iap_brand                    = google_iap_brand.dogcat.name
   artifact_repository_location = google_artifact_registry_repository.images.location
+  charts_bucket_name           = google_storage_bucket.charts.name
 
   depends_on = [module.cert_manager, module.external_dns]
 }
@@ -293,6 +304,8 @@ module "tekton_trigger" {
   source = "../../modules//tekton-trigger"
 
   trigger_domain = "trigger.${var.tekton_dashboard_domain}"
+  image_base     = "${google_artifact_registry_repository.images.location}-docker.pkg.dev/${var.project}/${google_artifact_registry_repository.images.repository_id}"
+  git_base_url   = var.tekton_trigger_git_base_url
 
   depends_on = [module.tekton]
 }

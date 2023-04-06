@@ -92,9 +92,9 @@ spec:
     - name: repoRevision
       value: $(body.head_commit.id)
     - name: repoURL
-      value: git@github.com:NucleusEngineering/$(body.repository.name).git
+      value: ${var.git_base_url}/$(body.repository.name).git
     - name: image
-      value: europe-west1-docker.pkg.dev/nvoss-dogcat-chapter-02-shared/images/$(body.repository.name):$(extensions.image_tag)
+      value: ${var.image_base}/$(body.repository.name):$(extensions.image_tag)
 ---
 apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerTemplate

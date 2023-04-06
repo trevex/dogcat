@@ -46,7 +46,7 @@ resource "google_container_cluster" "cluster" {
 
   resource_labels = { # The var.name should contain the environment in its name, if not we error
     "managed-by" = "tf"
-    "env"        = regexall(".*(dev|stage|prod|shared).*", var.name)[0][0]
+    "env"        = regexall(".*(dev|stg|prd|shared).*", var.name)[0][0]
   }
 
   release_channel {

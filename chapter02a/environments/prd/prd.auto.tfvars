@@ -1,5 +1,5 @@
-# The project you created: "${PROJECT_BASENAME}-shared":
-project = "nvoss-dogcat-chapter02-dev"
+# The project you created: "${PROJECT_BASENAME}-prd":
+project = "nvoss-dogcat-chapter02-prd"
 # The region you are working in "${REGION}":
 region = "europe-west3"
 
@@ -8,12 +8,12 @@ region = "europe-west3"
 # The project-name, zone-name and desired fqdn for dedidcated zone are required:
 dns_project        = "nvoss-demo-dns"
 dns_zone_name      = "nvoss-demo"
-dns_dedicated_fqdn = "dev.dogcat.nvoss.demo.altostrat.com."
+dns_dedicated_fqdn = "prd.dogcat.nvoss.demo.altostrat.com."
 
 # The `artifact_repository_id` and `(shared_)cluster_id` are outputs of the shared
 # terraform environment, e.g.:
 # `terraform -chdir=environments/shared output`
-# Alternatively they can be deduced based on your project name and region!
+# Alternatively they can be deduced based on your project id and region!
 artifact_repository_id = "projects/nvoss-dogcat-chapter02-shared/locations/europe-west3/repositories/images"
 shared_cluster_id      = "projects/nvoss-dogcat-chapter02-shared/locations/europe-west3/clusters/cluster-shared"
 

@@ -61,6 +61,10 @@ resource "helm_release" "argo_cd" {
     name  = "controller.serviceAccount.name"
     value = module.argo_cd_application_controller_wi.k8s_service_account_name
   }
+  set {
+    name  = "repoServer.serviceAccount.name"
+    value = "argocdreposerver" # TODO
+  }
 
   # We also want to ignore some resources that are automatically created by other
   # controllers/operators.
@@ -137,6 +141,8 @@ resource "kubernetes_ingress_v1" "argo_cd_iap" {
   }
 }
 
+# TODO: if it remains unused make optional  vvv
+#
 module "argo_cd_image_updater_wi" {
   source = "..//workload-identity"
 

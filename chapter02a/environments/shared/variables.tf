@@ -34,6 +34,10 @@ variable "tekton_dashboard_domain" {
   type = string
 }
 
+variable "tekton_trigger_git_base_url" {
+  type = string
+}
+
 variable "dns_project" {
   type = string
 }

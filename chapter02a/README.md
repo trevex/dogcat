@@ -98,10 +98,11 @@ Now let's start with the `shared`-cluster, which is were most of the tools
 of the internal developer platform are hosted.
 First we do a targeted rollout to provision our GKE cluster:
 ```bash
+terraform -chdir=environments/shared init
 terraform -chdir=environments/shared apply -target="module.cluster"
 ```
 
-__NOTE__: If you want to get a better of what is happening in the code, it is recommended to read the code as it was heavily commented for this purpose.
+__NOTE__: If you want to get a better of what is happening in the code, it is recommended to read the code as it was heavily commented for this purpose. Some short-cuts were taken for the purpose of this demo. A production-ready set up would most likely utilize `terragrunt` or `terramate`.
 
 
 ## Org-Policies (optional)
@@ -169,7 +170,47 @@ Terraform configured an event listener that we will use with our Github reposito
 ArgoCD already went ahead and deployed some shared tekton tasks from our `dogcat-applications` repository.
 
 
+## Let's roll out our application clusters
+
+Three application environments exist:
+- `dev` is the development environment containing the lastest changes from the master-branch
+- `stg` is the staging environment for the tracking releases such as release candidates
+- `prd` is the production environment for the latest stable releases and versions
+
+While in theory you can run less commands it is *recommended* to run the following
+commands in-sequence (if you want to run them non-interactively append `-auto-approve` to the apply commands):
+```bash
+terraform -chdir=environments/dev init
+terraform -chdir=environments/stg init
+# terraform -chdir=environments/prd init
+terraform -chdir=environments/dev apply -target="module.cluster"
+terraform -chdir=environments/stg apply -target="module.cluster"
+# terraform -chdir=environments/prd apply -target="module.cluster"
+terraform -chdir=environments/dev apply -target="module.external_dns"
+terraform -chdir=environments/stg apply -target="module.external_dns"
+# terraform -chdir=environments/prd apply -target="module.external_dns"
+terraform -chdir=environments/dev apply -target="module.cert_manager"
+terraform -chdir=environments/stg apply -target="module.cert_manager"
+# terraform -chdir=environments/prd apply -target="module.cert_manager"
+terraform -chdir=environments/dev apply -target="module.kyverno"
+terraform -chdir=environments/stg apply -target="module.kyverno"
+# terraform -chdir=environments/prd apply -target="module.kyverno"
+terraform -chdir=environments/dev apply -target="module.crossplane"
+terraform -chdir=environments/stg apply -target="module.crossplane"
+# terraform -chdir=environments/prd apply -target="module.crossplane"
+terraform -chdir=environments/dev apply
+terraform -chdir=environments/stg apply
+# terraform -chdir=environments/prd apply
+```
+The primary reason for this is the gradual rollout of CRDs to allow the controlplane and nodes to scale up.
+While some controller have less CRDs, Crossplane creates at least 200. A cluster and its controlplane at minimal scale will not be able to handle it.
+There is work undertaken both on the kubernetes- and crossplane-side to mitigate this (see [issue](https://github.com/crossplane/crossplane/issues/3754)).
+
+
+
 __TODO__: Other clusters...
+
+
 __TODO__: Policies
 
 ## Retrospective
