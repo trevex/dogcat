@@ -76,6 +76,8 @@ spec:
             value:
             - key: image_tag
               expression: "body.ref.startsWith('refs/tags/') ? body.ref.split('/')[2] : body.head_commit.id"
+            - key: chart_version
+              expression: "body.ref.startsWith('refs/tags/') ? body.ref.split('/')[2] : '0.0.0-dev.'+body.created_at.replace(':', '').replace(' ', '')+'.'+body.head_commit.id"
       bindings:
         - ref: github-binding
       template:
@@ -95,6 +97,8 @@ spec:
       value: ${var.git_base_url}/$(body.repository.name).git
     - name: image
       value: ${var.image_base}/$(body.repository.name):$(extensions.image_tag)
+    - name: chartVersion
+      value: $(extensions.chart_version)
 ---
 apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerTemplate
@@ -106,6 +110,7 @@ spec:
     - name: repoRevision
     - name: repoURL
     - name: image
+    - name: chartVersion
   resourcetemplates:
     - apiVersion: tekton.dev/v1beta1
       kind: PipelineRun
@@ -122,6 +127,8 @@ spec:
             value: $(tt.params.repoURL)
           - name: image
             value: $(tt.params.image)
+          - name: chartVersion
+            value: $(tt.params.chartVersion)
         podTemplate:
           securityContext:
             fsGroup: 65532
