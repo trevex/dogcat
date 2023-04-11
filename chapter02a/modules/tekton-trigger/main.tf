@@ -77,7 +77,7 @@ spec:
             - key: image_tag
               expression: "body.ref.startsWith('refs/tags/') ? body.ref.split('/')[2] : body.head_commit.id"
             - key: chart_version
-              expression: "body.ref.startsWith('refs/tags/') ? body.ref.split('/')[2] : '0.0.0-dev.'+body.head_commit.timestamp.replace(':', '').replace(' ', '')+'+'+body.head_commit.id"
+              expression: "body.ref.startsWith('refs/tags/') ? body.ref.split('/')[2] : '0.0.0-dev.'+body.head_commit.timestamp.replace(':', '').replace(' ', '').replace('+', '')+'-'+body.head_commit.id"
       bindings:
         - ref: github-binding
       template:
