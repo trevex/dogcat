@@ -10,6 +10,6 @@ variable "image_base" {
   type = string
 }
 
-variable "charts_bucket_name" {
+variable "chartmuseum_url" {
   type = string
 }

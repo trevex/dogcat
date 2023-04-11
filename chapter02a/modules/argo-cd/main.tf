@@ -31,11 +31,6 @@ module "argo_cd_repo_server_wi" {
   namespace = kubernetes_namespace.argo_cd.metadata[0].name
 }
 
-resource "google_storage_bucket_iam_member" "charts_access" {
-  bucket = var.charts_bucket_name
-  role   = "roles/storage.objectViewer"
-  member = "serviceAccount:${module.argo_cd_repo_server_wi.gcp_service_account_email}"
-}
 
 # Intentionally not HA as this is a demo, check for production configuration:
 # https://github.com/argoproj/argo-helm/tree/main/charts/argo-cd#high-availability
@@ -105,28 +100,9 @@ configs:
         clusters:
           - "*"
 EOT
-    , <<EOT
-repoServer:
-  env:
-    - name: HELM_PLUGINS
-      value: /helm-working-dir/plugins/
-  initContainers:
-    - name: install-helm-plugins
-      image: alpine/helm:3.11.1
-      volumeMounts:
-        - mountPath: /helm-working-dir
-          name: helm-working-dir
-      env:
-        - name: HELM_PLUGINS
-          value: /helm-working-dir/plugins
-      command: ["/bin/sh", "-c"]
-      args:
-        - apk --no-cache add curl;
-          helm plugin install https://github.com/hayorov/helm-gcs.git --version 0.4.1;
-EOT
   ]
 
-  depends_on = [module.argo_cd_repo_server_wi, google_storage_bucket_iam_member.charts_access]
+  depends_on = [module.argo_cd_repo_server_wi]
 }
 
 # Let's expose the ArgoCD server, but protected via IAP

@@ -22,7 +22,3 @@ variable "iap_brand" {
 variable "domain" {
   type = string
 }
-
-variable "charts_bucket_name" {
-  type = string
-}

@@ -22,6 +22,9 @@ cert_manager_version = "v1.11.0" # chart-version
 # We use external-dns to setup DNS records for our Ingress resources
 external_dns_version = "v6.14.0" # chart-version
 
+# TODO
+chartmuseum_version = "v3.9.3" # chart-version
+
 # ArgoCD versions, domain and which repository is used to roll out applications
 argo_cd_version               = "v5.23.5" # chart-version
 argo_cd_image_updater_version = "v0.8.4"  # chart-version

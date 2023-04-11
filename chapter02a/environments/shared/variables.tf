@@ -62,6 +62,10 @@ variable "letsencrypt_email" {
   type = string
 }
 
+variable "chartmuseum_version" {
+  type = string
+}
+
 variable "argo_cd_version" {
   type = string
 }

@@ -134,8 +134,8 @@ spec:
             value: $(tt.params.imageTag)
           - name: chartVersion
             value: $(tt.params.chartVersion)
-          - name: chartsBucketName
-            value: ${var.charts_bucket_name}
+          - name: chartmuseumURL
+            value: ${var.chartmuseum_url}
         podTemplate:
           securityContext:
             fsGroup: 65532
