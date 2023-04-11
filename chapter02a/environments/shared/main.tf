@@ -249,7 +249,7 @@ EOF
 }
 
 
-# # Tekton
+# Tekton
 
 module "tekton" {
   source = "../../modules//tekton"
