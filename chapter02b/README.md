@@ -15,8 +15,6 @@ kubectl get secrets -n tekton tekton-trigger-secret --template='{{ index .data "
 
 
 
-
-
 # Setup build environment CI/CD for our game
 
 gcloud config set project nvoss-dogcat-chapter-02-shared
