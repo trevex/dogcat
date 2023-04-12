@@ -246,6 +246,9 @@ resource "kubernetes_manifest" "cluster_applications" {
             }, {
             name  = "destination.server"
             value = module.cluster.host
+            }, {
+            name  = "chartmuseum.url"
+            value = "http://chartmuseum.chartmuseum.svc:8080"
           }]
         }
       }
