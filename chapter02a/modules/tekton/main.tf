@@ -57,6 +57,15 @@ resource "google_service_account_iam_member" "tekton_chains_wi" {
   member             = "serviceAccount:${var.project}.svc.id.goog[tekton-chains/tekton-chains-controller]"
 }
 
+
+resource "google_project_iam_member" "tekton_chains_roles" {
+  for_each = toset(["roles/artifactregistry.writer", "roles/storage.admin"]) # NOTE: should be more fine-granular for production on per AR-level
+
+  project = var.project
+  role    = each.value
+  member  = "serviceAccount:${google_service_account.tekton_chains.email}"
+}
+
 locals {
   # https://issuetracker.google.com/issues/227162588
   tekton_chains_manifests_tmp = replace(tostring(data.http.tekton_chain_manifests.response_body), "/safe-to-evict: \"false\"/", "safe-to-evict: \"true\"")
@@ -118,6 +127,7 @@ resource "google_kms_crypto_key_iam_member" "crypto_key" {
   role          = "roles/cloudkms.signerVerifier"
   member        = "serviceAccount:${google_service_account.tekton_chains.email}"
 }
+
 
 # NOTE: Using this kind of resource with helm is a pain, so we work around it,
 #       by storing the revision in the data, but we should consider deploying via ArgoCD instead.
