@@ -1,4 +1,4 @@
-project: nvoss-dogcat-chapter-02-dev
+project: nvoss-dogcat-chapter02-dev
 region: europe-west1
 
 ingress:
