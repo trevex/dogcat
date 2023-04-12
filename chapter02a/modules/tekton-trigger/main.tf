@@ -97,8 +97,6 @@ spec:
       value: ${var.git_base_url}/$(body.repository.name).git
     - name: image
       value: ${var.image_base}/$(body.repository.name):$(extensions.image_tag)
-    - name: imageTag
-      value: $(extensions.image_tag)
     - name: chartVersion
       value: $(extensions.chart_version)
 ---
@@ -112,7 +110,6 @@ spec:
     - name: repoRevision
     - name: repoURL
     - name: image
-    - name: imageTag
     - name: chartVersion
   resourcetemplates:
     - apiVersion: tekton.dev/v1beta1
@@ -130,8 +127,6 @@ spec:
             value: $(tt.params.repoURL)
           - name: image
             value: $(tt.params.image)
-          - name: imageTag
-            value: $(tt.params.imageTag)
           - name: chartVersion
             value: $(tt.params.chartVersion)
           - name: chartmuseumURL
