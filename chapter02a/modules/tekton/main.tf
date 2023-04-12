@@ -44,13 +44,47 @@ data "http" "tekton_chain_manifests" {
   }
 }
 
+resource "google_service_account" "tekton_chains" {
+  account_id   = "tekton-chains"
+  display_name = substr("GCP SA bound to K8S SA [tekton-chains/tekton-chains-controller]", 0, 100)
+  project      = var.project
+}
+
+
+resource "google_service_account_iam_member" "tekton_chains_wi" {
+  service_account_id = google_service_account.tekton_chains.name
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "serviceAccount:${var.project}.svc.id.goog[tekton-chains/tekton-chains-controller]"
+}
+
+locals {
+  # https://issuetracker.google.com/issues/227162588
+  tekton_chains_manifests_tmp = replace(tostring(data.http.tekton_chain_manifests.response_body), "/safe-to-evict: \"false\"/", "safe-to-evict: \"true\"")
+  # We also need our annotation :|
+  tekton_chains_manifests = replace(local.tekton_chains_manifests_tmp, <<EOF
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-chains-controller
+  namespace: tekton-chains
+  EOF
+    , <<EOF
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-chains-controller
+  namespace: tekton-chains
+  annotations:
+    iam.gke.io/gcp-service-account: ${google_service_account.tekton_chains.email}
+  EOF
+  )
+}
+
 module "tekton_chains" {
   source = "..//helm-manifests"
 
-  name = "tekton-chains"
-  # https://issuetracker.google.com/issues/227162588
-  manifests = replace(tostring(data.http.tekton_chain_manifests.response_body), "/safe-to-evict: \"false\"/", "safe-to-evict: \"true\"")
-
+  name       = "tekton-chains"
+  manifests  = local.tekton_chains_manifests
   depends_on = [module.tekton_pipeline, module.tekton_triggers]
 }
 
@@ -76,13 +110,13 @@ resource "google_kms_crypto_key" "tekton_chains" {
 resource "google_kms_key_ring_iam_member" "key_ring" {
   key_ring_id = google_kms_key_ring.tekton_chains.id
   role        = "roles/cloudkms.viewer"
-  member      = "serviceAccount:${module.wi.gcp_service_account_email}"
+  member      = "serviceAccount:${google_service_account.tekton_chains.email}"
 }
 
 resource "google_kms_crypto_key_iam_member" "crypto_key" {
   crypto_key_id = google_kms_crypto_key.tekton_chains.id
   role          = "roles/cloudkms.signerVerifier"
-  member        = "serviceAccount:${module.wi.gcp_service_account_email}"
+  member        = "serviceAccount:${google_service_account.tekton_chains.email}"
 }
 
 # NOTE: Using this kind of resource with helm is a pain, so we work around it,
