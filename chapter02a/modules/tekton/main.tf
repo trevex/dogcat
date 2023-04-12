@@ -139,8 +139,10 @@ resource "kubernetes_config_map_v1_data" "tekton_chains" {
   }
 
   data = {
+    "artifacts.taskrun.format"      = "slsa/v1"
     "artifacts.taskrun.signer"      = "kms"
     "artifacts.taskrun.storage"     = "tekton,oci"
+    "artifacts.pipelinerun.format"  = "slsa/v1"
     "artifacts.pipelinerun.signer"  = "kms"
     "artifacts.pipelinerun.storage" = "tekton,oci"
     "artifacts.oci.signer"          = "kms"
