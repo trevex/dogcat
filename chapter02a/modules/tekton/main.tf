@@ -139,11 +139,13 @@ resource "kubernetes_config_map_v1_data" "tekton_chains" {
   }
 
   data = {
-    "artifacts.taskrun.signer"     = "kms"
-    "artifacts.pipelinerun.signer" = "kms"
-    "artifacts.oci.signer"         = "kms"
-    "signers.kms.kmsref"           = "gcpkms://${google_kms_key_ring.tekton_chains.id}/cryptoKeys/${google_kms_crypto_key.tekton_chains.name}"
-    "storage.grafeas.notehint"     = "We are using this field as dummy for the revision: ${module.tekton_chains.revision}"
+    "artifacts.taskrun.signer"      = "kms"
+    "artifacts.taskrun.storage"     = "tekton,oci"
+    "artifacts.pipelinerun.signer"  = "kms"
+    "artifacts.pipelinerun.storage" = "tekton,oci"
+    "artifacts.oci.signer"          = "kms"
+    "signers.kms.kmsref"            = "gcpkms://${google_kms_key_ring.tekton_chains.id}/cryptoKeys/${google_kms_crypto_key.tekton_chains.name}"
+    "storage.grafeas.notehint"      = "We are using this field as dummy for the revision: ${module.tekton_chains.revision}"
   }
   depends_on = [module.tekton_chains]
 }
