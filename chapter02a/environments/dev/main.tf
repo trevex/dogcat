@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "nvoss-dogcat-chapter02-tf-state"
+    bucket = "nvoss-dogcat-ch02-tf-state"
     prefix = "terraform/dev"
   }
 }

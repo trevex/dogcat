@@ -1,5 +1,5 @@
 # The project you created: "${PROJECT_BASENAME}-shared":
-project = "nvoss-dogcat-chapter02-shared"
+project = "nvoss-dogcat-ch02-shared"
 # The region you are working in "${REGION}":
 region = "europe-west3"
 
@@ -14,6 +14,12 @@ dns_dedicated_fqdn = "shared.dogcat.nvoss.demo.altostrat.com."
 # trusted domain and support email for the OAuth-Client.
 iap_access_domain = "nvoss.altostrat.com"
 iap_support_email = "admin@nvoss.altostrat.com"
+
+# TODO
+crossplane_version                    = "v1.12.1" # chart-version
+crossplane_provider_terraform_version = "v0.7.0"
+
+
 
 # Cert-Manager will use let's encrypt and to self-register we need an email as well
 letsencrypt_email    = "nvoss@google.com"

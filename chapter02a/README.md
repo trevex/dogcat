@@ -15,12 +15,12 @@ base64
 ```
 __NOTE__: The above tools are assumed to be GNU-variants if applicable.
 
-This guide does not go into detail how to set up a public domain. 
+This guide does not go into detail how to set up a public domain.
 A public domain has to be set up with its zone configured in another Google Cloud project.
 The sub-zone will be created for each cluster/project.
 
 The internal platform services, such as ArgoCD and Tekton, will be hosted under sub-domains of this public domain,
-but will be protected by an Identity-Aware Proxy (IAP), which will restrict access to the domain of the organization.
+but will be protected by an Identity-Aware Proxy (IAP), which will restrict access to the domain outside of your organization.
 
 ## Fork `dogcat-applications`
 
@@ -32,25 +32,25 @@ __TODO__
 Before we start we need four projects:
 1. One project that is referred to as `shared`-project containing CI/CD and other central services.
 2. A project for the development environment (`dev`)
-3. A project for the staging environment (`stg`)
-4. Finally a project for the production environment (`prd`)
+3. Finally a project for the production environment (`prd`). 
+
+__NOTE__: We do not create a staging environment as little value is added for the purpose of this demo, but this is most likely something desirable in a real world scenario.
 
 __TODO__: insert diagram
 
 You can create the projects using the CLI. Adapt your `PROJECT_BASENAME` and `REGION` as required:
 ```bash
 cd chapter02a
-export PROJECT_BASENAME="nvoss-dogcat-chapter02"
+export PROJECT_BASENAME="nvoss-dogcat-ch02"
 export REGION="europe-west3"
 gcloud projects create ${PROJECT_BASENAME}-shared --labels=environment=shared
 gcloud projects create ${PROJECT_BASENAME}-dev --labels=environment=dev
-gcloud projects create ${PROJECT_BASENAME}-stg --labels=environment=stg
 gcloud projects create ${PROJECT_BASENAME}-prd --labels=environment=prd
 
 # Produces output as follows (will take a minute):
-Create in progress for [https://cloudresourcemanager.googleapis.com/v1/projects/nvoss-dogcat-chapter02-shared].
+Create in progress for [https://cloudresourcemanager.googleapis.com/v1/projects/nvoss-dogcat-ch02-shared].
 Waiting for [operations/cp.5589693136193213439] to finish...done.
-Enabling service [cloudapis.googleapis.com] on project [nvoss-dogcat-chapter02-shared]...
+Enabling service [cloudapis.googleapis.com] on project [nvoss-dogcat-ch02-shared]...
 [...]
 ```
 
@@ -83,7 +83,7 @@ configurations, so we have to update them by other means.
 You can either open all `environments/*/main.tf`-files and update the name of the bucket
 to match the bucket created earlier or use a command such as (requires `ripgrep`, GNU-`xargs`, GNU-`sed`):
 ```bash
-rg -l 'backend "gcs"' | xargs -I{} sed -i "s/nvoss-dogcat-chapter02-tf-state/${PROJECT_BASENAME}-tf-state/g" {}
+rg -l 'backend "gcs"' | xargs -I{} sed -i "s/nvoss-dogcat-ch02-tf-state/${PROJECT_BASENAME}-tf-state/g" {}
 ```
 
 Next you will have to update the terraform variables, that are set.
@@ -205,6 +205,12 @@ terraform -chdir=environments/stg apply
 The primary reason for this is the gradual rollout of CRDs to allow the controlplane and nodes to scale up.
 While some controller have less CRDs, Crossplane creates at least 200. A cluster and its controlplane at minimal scale will not be able to handle it.
 There is work undertaken both on the kubernetes- and crossplane-side to mitigate this (see [issue](https://github.com/crossplane/crossplane/issues/3754)).
+
+There is a chance Crossplane is still applying CRDs when you run the last command, greeting you with an error such as:
+```
+no matches for kind "ProviderConfig" in version "gcp.upbound.io/v1beta1"
+```
+If this is the case simply run the `terraform apply` again a few minutes later.
 
 
 

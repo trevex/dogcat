@@ -14,6 +14,14 @@ variable "iap_access_domain" {
   type = string
 }
 
+variable "crossplane_version" {
+  type = string
+}
+
+variable "crossplane_provider_terraform_version" {
+  type = string
+}
+
 variable "tekton_pipeline_version" {
   type = string
 }
