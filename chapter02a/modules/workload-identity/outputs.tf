@@ -9,3 +9,7 @@ output "gcp_service_account_email" {
 output "gcp_service_account_name" {
   value = google_service_account.sa.name
 }
+
+output "gcp_roles" {
+  value = local.roles
+}

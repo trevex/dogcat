@@ -31,19 +31,19 @@ module "provider_terraform" {
 
   name      = "crossplane-provider-terraform"
   namespace = kubernetes_namespace.crossplane.metadata[0].name
+  # TODO: Reduce ClusterRoleBinding permissions!
   manifests = <<EOF
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
-  name: crossplane-provider-terraform-k8s-admin
-  namespace: ${kubernetes_namespace.crossplane.metadata[0].name}
+  name: crossplane-provider-terraform-cluster-admin
 subjects:
 - kind: ServiceAccount
   name: ${module.provider_terraform_wi.k8s_service_account_name}
   namespace: ${kubernetes_namespace.crossplane.metadata[0].name}
 roleRef:
   kind: ClusterRole
-  name: admin
+  name: cluster-admin
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: pkg.crossplane.io/v1alpha1
