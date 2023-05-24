@@ -162,8 +162,9 @@ module "crossplane" {
 module "crossplane_composites" {
   source = "../../modules//crossplane-composites"
 
-  project = var.project
-  region  = var.region
+  project   = var.project
+  region    = var.region
+  iap_brand = google_iap_brand.dogcat.name
 
   depends_on = [module.crossplane]
 }

@@ -41,7 +41,7 @@ spec:
               string:
                 type: Convert
                 convert: ToJson
-        - fromFieldPath: spec.port # TODO: optional
+        - fromFieldPath: spec.port
           toFieldPath: spec.forProvider.vars[3].value
         - fromFieldPath: spec.targetPort
           toFieldPath: spec.forProvider.vars[4].value
@@ -70,12 +70,16 @@ spec:
         properties:
           spec:
             type: object
-            properties: # TODO
-              roles:
-                type: array
-                x-kubernetes-validations:
-                  - rule: "size(self) == 1"
-                items:
+            properties:
+              targetPort:
+                type: number
+              port:
+                type: number
+              selector:
+                type: object
+                additionalProperties:
                   type: string
             required:
-            - roles
+            - selector
+            - port
+            - targetPort

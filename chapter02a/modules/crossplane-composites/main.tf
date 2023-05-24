@@ -18,6 +18,16 @@ ${templatefile("${path.module}/files/workloadidentity.yaml", {
     file("${path.module}/../workload-identity/main.tf"),
     file("${path.module}/../workload-identity/outputs.tf"),
   ]
+  })}
+---
+${templatefile("${path.module}/files/iapservice.yaml", {
+  iap_brand = var.iap_brand
+  # See note above
+  src_files = [
+    file("${path.module}/../iap-service/variables.tf"),
+    file("${path.module}/../iap-service/main.tf"),
+    file("${path.module}/../iap-service/outputs.tf"),
+  ]
 })}
 ---
 EOF
