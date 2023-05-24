@@ -43,8 +43,16 @@ spec:
                 convert: ToJson
         - fromFieldPath: spec.port
           toFieldPath: spec.forProvider.vars[3].value
+          transforms:
+            - type: convert
+              convert:
+               toType: string
         - fromFieldPath: spec.targetPort
           toFieldPath: spec.forProvider.vars[4].value
+          transforms:
+            - type: convert
+              convert:
+               toType: string
 ---
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
@@ -72,9 +80,9 @@ spec:
             type: object
             properties:
               targetPort:
-                type: number
+                type: integer
               port:
-                type: number
+                type: integer
               selector:
                 type: object
                 additionalProperties:
