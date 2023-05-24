@@ -67,8 +67,6 @@ spec:
             properties:
               roles:
                 type: array
-                x-kubernetes-validations:
-                  - rule: "size(self) == 1"
                 items:
                   type: string
             required:
