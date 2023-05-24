@@ -1,0 +1,81 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xiapservice.gcp.nvoss.demo.altostrat.com
+  labels:
+    provider: gcp
+    implementation: terraform
+spec:
+  compositeTypeRef:
+    apiVersion: gcp.nvoss.demo.altostrat.com/v1alpha1
+    kind: XIAPService
+  resources:
+    - name: tf-iapservice
+      base:
+        apiVersion: tf.upbound.io/v1beta1
+        kind: Workspace
+        spec:
+          forProvider:
+            source: Inline
+            module: |
+              %{ for content in src_files }
+              ${indent(14, content)}
+              %{ endfor }
+            vars:
+              - key: name
+              - key: namespace
+              - key: selector_json
+              - key: port
+              - key: target_port
+              - key: iap_brand
+                value: ${iap_brand}
+      patches:
+        - fromFieldPath: metadata.labels["crossplane.io/claim-name"]
+          toFieldPath: spec.forProvider.vars[0].value
+        - fromFieldPath: metadata.labels["crossplane.io/claim-namespace"]
+          toFieldPath: spec.forProvider.vars[1].value
+        - fromFieldPath: spec.selector
+          toFieldPath: spec.forProvider.vars[2].value
+          transforms:
+            - type: string
+              string:
+                type: Convert
+                convert: ToJson
+        - fromFieldPath: spec.port # TODO: optional
+          toFieldPath: spec.forProvider.vars[3].value
+        - fromFieldPath: spec.targetPort
+          toFieldPath: spec.forProvider.vars[4].value
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xiapservices.gcp.nvoss.demo.altostrat.com
+spec:
+  group: gcp.nvoss.demo.altostrat.com
+  names:
+    kind: XIAPService
+    plural: xiapservices
+  claimNames:
+    kind: IAPService
+    plural: iapservices
+  defaultCompositionRef:
+    name: xiapservice.gcp.nvoss.demo.altostrat.com
+  versions:
+  - name: v1alpha1
+    served: true
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties: # TODO
+              roles:
+                type: array
+                x-kubernetes-validations:
+                  - rule: "size(self) == 1"
+                items:
+                  type: string
+            required:
+            - roles

@@ -92,6 +92,18 @@ to match your projects, region and DNS-settings.
 The comments in the files may assist you.
 
 
+## TODO Roll out first cluster
+cluster + crossplane
+
+## Bootstrap ArgoCD
+login to cluster
+update config
+-> app of apps repo
+-> cert-manager project ids
+kubectl apply -k dogcat-applications/config/argocd
+
+
+
 ## Roll out the first cluster
 
 Now let's start with the `shared`-cluster, which is were most of the tools

@@ -9,7 +9,7 @@ module "composites" {
   namespace = "crossplane-system"
 
   manifests = <<EOF
-${templatefile("${path.module}/files/serviceaccount.yaml", {
+${templatefile("${path.module}/files/workloadidentity.yaml", {
   project = var.project
   # We pass in the src explicitly as we are crossing module boundaries here
   # for simplicity, if template was self-contained we could use ${file(...)}

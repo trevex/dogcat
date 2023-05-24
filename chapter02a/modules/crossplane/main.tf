@@ -31,7 +31,8 @@ module "provider_terraform" {
 
   name      = "crossplane-provider-terraform"
   namespace = kubernetes_namespace.crossplane.metadata[0].name
-  # TODO: Reduce ClusterRoleBinding permissions!
+  # NOTE: For a production setup you should review the permissions assigned via
+  #       the ClusterRoleBinding below.
   manifests = <<EOF
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -70,59 +71,6 @@ EOF
 # resource "time_sleep" "wait_10_seconds" {
 #   depends_on = [module.provider_terraform]
 #   create_duration = "10s"
-# }
-
-# # NOTE: Workload Identity currently not supported by the terraform-provider,
-# #       so let's explicitly create a private key for the GCP-ServiceAccount.
-
-# resource "google_service_account_key" "provider_terraform" {
-#   service_account_id = module.provider_terraform_wi.gcp_service_account_name
-# }
-
-# resource "kubernetes_secret" "provider_terraform_gcp_credentials" {
-#   metadata {
-#     name      = "provider-terraform-gcp-credentials"
-#     namespace = kubernetes_namespace.crossplane.metadata[0].name
-#   }
-#   data = {
-#     "credentials.json" = base64decode(google_service_account_key.provider_terraform.private_key)
-#   }
-# }
-
-# module "provider_terraform_config" {
-#   # See reason to use helm above
-#   source = "..//helm-manifests"
-
-#   name      = "crossplane-provider-terraform-config"
-#   namespace = kubernetes_namespace.crossplane.metadata[0].name
-#   manifests = <<EOF
-# apiVersion: tf.upbound.io/v1beta1
-# kind: ProviderConfig
-# metadata:
-#   name: default
-# spec:
-#   credentials:
-#     - filename: gcp-credentials.json
-#       source: Secret
-#       secretRef:
-#         namespace: ${kubernetes_namespace.crossplane.metadata[0].name}
-#         name: ${kubernetes_secret.provider_terraform_gcp_credentials.metadata[0].name}
-#         key: credentials.json
-#   configuration: |
-#     provider "google" {
-#       credentials = "gcp-credentials.json"
-#       project = "${var.project}"
-#       region  = "${var.region}"
-#     }
-
-#     terraform {
-#       backend "kubernetes" {
-#         secret_suffix     = "providerconfig-default"
-#         namespace         = "crossplane-system"
-#         in_cluster_config = true
-#       }
-#     }
-# EOF
 # }
 
 module "provider_terraform_config" {
