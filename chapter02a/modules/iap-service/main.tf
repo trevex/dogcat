@@ -36,7 +36,7 @@ resource "kubernetes_manifest" "config" {
 }
 
 locals {
-  selector = length(var.selector) == 0 ? try(toset(jsondecode(var.selector_json)), {}) : var.selector
+  selector = length(var.selector) == 0 ? try(jsondecode(var.selector_json), {}) : var.selector
 }
 
 resource "kubernetes_service" "service" {
