@@ -1,0 +1,73 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xworkloadidentity.gcp.nvoss.demo.altostrat.com
+  labels:
+    provider: gcp
+    implementation: terraform
+spec:
+  compositeTypeRef:
+    apiVersion: gcp.nvoss.demo.altostrat.com/v1alpha1
+    kind: XWorkloadIdentity
+  resources:
+    - name: tf-workspace
+      base:
+        apiVersion: tf.upbound.io/v1beta1
+        kind: Workspace
+        spec:
+          forProvider:
+            source: Inline
+            module: |
+              %{ for content in src_files }
+              ${indent(14, content)}
+              %{ endfor }
+            vars:
+              - key: name
+              - key: namespace
+              - key: roles_json
+              - key: project
+                value: ${project}
+      patches:
+        - fromFieldPath: metadata.labels["crossplane.io/claim-name"]
+          toFieldPath: spec.forProvider.vars[0].value
+        - fromFieldPath: metadata.labels["crossplane.io/claim-namespace"]
+          toFieldPath: spec.forProvider.vars[1].value
+        - fromFieldPath: spec.roles
+          toFieldPath: spec.forProvider.vars[2].value
+          transforms:
+            - type: string
+              string:
+                type: Convert
+                convert: ToJson
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xworkloadidentities.gcp.nvoss.demo.altostrat.com
+spec:
+  group: gcp.nvoss.demo.altostrat.com
+  names:
+    kind: XWorkloadIdentity
+    plural: xworkloadidentities
+  claimNames:
+    kind: WorkloadIdentity
+    plural: workloadidentities
+  defaultCompositionRef:
+    name: xworkloadidentity.gcp.nvoss.demo.altostrat.com
+  versions:
+  - name: v1alpha1
+    served: true
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              roles:
+                type: array
+                items:
+                  type: string
+            required:
+            - roles

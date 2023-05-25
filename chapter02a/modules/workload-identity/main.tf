@@ -27,8 +27,12 @@ resource "google_service_account_iam_member" "wi" {
   member             = "serviceAccount:${var.project}.svc.id.goog[${var.namespace}/${var.name}]"
 }
 
+locals {
+  roles = length(var.roles) == 0 ? try(toset(jsondecode(var.roles_json)), []) : var.roles
+}
+
 resource "google_project_iam_member" "roles" {
-  for_each = var.roles
+  for_each = local.roles
 
   project = var.project
   role    = each.value

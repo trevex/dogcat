@@ -35,6 +35,10 @@ resource "kubernetes_manifest" "config" {
   }
 }
 
+locals {
+  selector = length(var.selector) == 0 ? try(jsondecode(var.selector_json), {}) : var.selector
+}
+
 resource "kubernetes_service" "service" {
   metadata {
     name      = var.name
@@ -46,7 +50,7 @@ resource "kubernetes_service" "service" {
   }
   spec {
     type     = "ClusterIP"
-    selector = var.selector
+    selector = local.selector
     port {
       name        = "default"
       port        = var.port

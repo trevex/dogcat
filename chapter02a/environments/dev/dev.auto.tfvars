@@ -1,5 +1,5 @@
 # The project you created: "${PROJECT_BASENAME}-shared":
-project = "nvoss-dogcat-chapter02-dev"
+project = "nvoss-dogcat-ch02-dev"
 # The region you are working in "${REGION}":
 region = "europe-west3"
 
@@ -14,8 +14,23 @@ dns_dedicated_fqdn = "dev.dogcat.nvoss.demo.altostrat.com."
 # terraform environment, e.g.:
 # `terraform -chdir=environments/shared output`
 # Alternatively they can be deduced based on your project name and region!
-artifact_repository_id = "projects/nvoss-dogcat-chapter02-shared/locations/europe-west3/repositories/images"
-shared_cluster_id      = "projects/nvoss-dogcat-chapter02-shared/locations/europe-west3/clusters/cluster-shared"
+artifact_repository_id = "projects/nvoss-dogcat-ch02-shared/locations/europe-west3/repositories/images"
+shared_cluster_id      = "projects/nvoss-dogcat-ch02-shared/locations/europe-west3/clusters/cluster-shared"
+
+# We protect our development-services with IAP, so specify a fitting
+# trusted domain and support email for the OAuth-Client.
+iap_access_domain = "nvoss.altostrat.com"
+iap_support_email = "admin@nvoss.altostrat.com"
+
+crossplane_version                    = "v1.12.1" # chart-version
+crossplane_provider_terraform_version = "v0.7.0"
+
+
+
+
+
+
+
 
 # For this cluster an instantiation of apps-of-apps is used, so let's specify
 # our fork of the applications repository.
@@ -27,10 +42,8 @@ letsencrypt_email    = "nvoss@google.com"
 cert_manager_version = "v1.11.0" # chart-version
 
 # Versions of the components installed to the cluster
-external_dns_version            = "v6.14.0" # chart-version
-kyverno_version                 = "v2.7.0"  # chart-version
-crossplane_version              = "v1.11.1"
-crossplane_provider_gcp_version = "v0.28.0"
+external_dns_version = "v6.14.0" # chart-version
+kyverno_version      = "v2.7.0"  # chart-version
 
 # Will set up per team resources, such as namespaces, policies and Crossplane-providers
 teams = ["dogcat"]

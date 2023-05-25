@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "nvoss-dogcat-chapter02-tf-state"
+    bucket = "nvoss-dogcat-ch02-tf-state"
     prefix = "terraform/dev"
   }
 }
@@ -24,6 +24,7 @@ resource "google_project_service" "services" {
     "container.googleapis.com",
     "sqladmin.googleapis.com",
     "dns.googleapis.com",
+    "iap.googleapis.com",
   ])
   project = var.project
   service = each.value
@@ -102,6 +103,10 @@ resource "google_artifact_registry_repository_iam_member" "ar_reader" {
   member = "serviceAccount:${module.cluster.cluster_sa_email}"
 }
 
+###############################################################################
+# Setup Crossplane and our Compositions
+###############################################################################
+
 data "google_client_config" "cluster" {}
 
 provider "kubernetes" {
@@ -121,7 +126,44 @@ provider "helm" {
   }
 }
 
-# And we register this cluster declaratively with ArgoCD
+resource "google_iap_brand" "dogcat" {
+  support_email     = var.iap_support_email
+  application_title = "Dogcat Dev"
+
+  depends_on = [google_project_service.services]
+}
+
+resource "google_iap_web_iam_member" "access_iap_policy" {
+  project = var.project
+  role    = "roles/iap.httpsResourceAccessor"
+  member  = "domain:${var.iap_access_domain}"
+
+  depends_on = [google_project_service.services]
+}
+
+module "crossplane" {
+  source = "../../modules//crossplane"
+
+  chart_version              = var.crossplane_version
+  provider_terraform_version = var.crossplane_provider_terraform_version
+  project                    = var.project
+  region                     = var.region
+}
+
+
+module "crossplane_composites" {
+  source = "../../modules//crossplane-composites"
+
+  project   = var.project
+  region    = var.region
+  iap_brand = google_iap_brand.dogcat.name
+
+  depends_on = [module.crossplane]
+}
+
+###############################################################################
+# Register cluster declaratively with ArgoCD in shared cluster
+###############################################################################
 
 locals {
   shared_cluster_splits = split("/", var.shared_cluster_id)
@@ -131,8 +173,8 @@ locals {
     location = local.shared_cluster_splits[3]
     name     = local.shared_cluster_splits[5]
   }
-  argo_cd_server_email                 = "argo-cd-server@${local.shared_cluster.project}.iam.gserviceaccount.com"
-  argo_cd_application_controller_email = "argo-cd-application-controller@${local.shared_cluster.project}.iam.gserviceaccount.com"
+  argocd_server_email                 = "argocd-server@${local.shared_cluster.project}.iam.gserviceaccount.com"
+  argocd_application_controller_email = "argocd-application-controller@${local.shared_cluster.project}.iam.gserviceaccount.com"
 }
 
 data "google_container_cluster" "shared" {
@@ -149,16 +191,16 @@ provider "kubernetes" {
   cluster_ca_certificate = base64decode(data.google_container_cluster.shared.master_auth[0].cluster_ca_certificate)
 }
 
-resource "google_project_iam_member" "argo_cd_server" {
+resource "google_project_iam_member" "argocd_server" {
   project = var.project
   role    = "roles/container.viewer"
-  member  = "serviceAccount:${local.argo_cd_server_email}"
+  member  = "serviceAccount:${local.argocd_server_email}"
 }
 
-resource "google_project_iam_member" "argo_cd_application_controller" {
+resource "google_project_iam_member" "argocd_application_controller" {
   project = var.project
-  role    = "roles/container.developer"
-  member  = "serviceAccount:${local.argo_cd_application_controller_email}"
+  role    = "roles/container.admin"
+  member  = "serviceAccount:${local.argocd_application_controller_email}"
 }
 
 resource "kubernetes_secret" "cluster_registration" {
@@ -166,7 +208,7 @@ resource "kubernetes_secret" "cluster_registration" {
 
   metadata {
     name      = module.cluster.name
-    namespace = "argo-cd"
+    namespace = "argocd"
     labels = {
       "argocd.argoproj.io/secret-type" = "cluster"
     }
@@ -189,7 +231,7 @@ resource "kubernetes_secret" "cluster_registration" {
 EOF
   }
 
-  depends_on = [google_project_iam_member.argo_cd_server, google_project_iam_member.argo_cd_application_controller]
+  depends_on = [google_project_iam_member.argocd_server, google_project_iam_member.argocd_application_controller]
 }
 
 resource "kubernetes_manifest" "cluster_app_project" {
@@ -200,7 +242,7 @@ resource "kubernetes_manifest" "cluster_app_project" {
     kind       = "AppProject"
     metadata = {
       name      = module.cluster.name
-      namespace = "argo-cd"
+      namespace = "argocd"
     }
     spec = {
       description = "Project for ${module.cluster.name} applications"
@@ -226,11 +268,11 @@ resource "kubernetes_manifest" "cluster_applications" {
     kind       = "Application"
     metadata = {
       name      = module.cluster.name
-      namespace = "argo-cd"
+      namespace = "argocd"
     }
     spec = {
       destination = { # App of apps is installed in shared cluster
-        namespace = "argo-cd"
+        namespace = "argocd"
         server    = "https://kubernetes.default.svc"
       }
       project = "cluster-shared"
@@ -238,19 +280,6 @@ resource "kubernetes_manifest" "cluster_applications" {
         path           = module.cluster.name
         repoURL        = var.argo_cd_applications_repo_url
         targetRevision = "HEAD"
-        helm = {
-          releaseName = "${module.cluster.name}-applications"
-          parameters = [{ # But we point our subsequent apps to our newly created cluster, by passing in helm-parameters
-            name  = "environment"
-            value = "dev"
-            }, {
-            name  = "destination.server"
-            value = module.cluster.host
-            }, {
-            name  = "chartmuseum.url"
-            value = "http://chartmuseum.chartmuseum.svc:8080"
-          }]
-        }
       }
       syncPolicy = var.argo_cd_sync_policy_automated ? {
         automated = { prune = false }
@@ -259,57 +288,4 @@ resource "kubernetes_manifest" "cluster_applications" {
   }
 
   depends_on = [kubernetes_secret.cluster_registration]
-}
-
-# External DNS
-
-module "external_dns" {
-  source = "../../modules//external-dns"
-
-  project       = var.project
-  chart_version = var.external_dns_version
-  dns_zones     = [module.dns_zone.fqdn]
-}
-
-# Cert-Manager
-
-module "cert_manager" {
-  source = "../../modules//cert-manager"
-
-  project           = var.project
-  chart_version     = var.cert_manager_version
-  dns_zones         = [module.dns_zone.fqdn]
-  letsencrypt_email = var.letsencrypt_email
-}
-
-# Kyverno
-
-module "kyverno" {
-  source = "../../modules//kyverno"
-
-  chart_version = var.kyverno_version
-}
-
-# Crossplane
-
-module "crossplane" {
-  source = "../../modules//crossplane"
-
-  chart_version        = var.crossplane_version
-  provider_gcp_version = var.crossplane_provider_gcp_version
-  project              = var.project
-}
-
-
-# Now we setup the team-specific resources
-
-module "team" {
-  for_each = var.teams
-
-  source = "../../modules//team"
-
-  project = var.project
-  name    = each.value
-
-  depends_on = [module.cluster, module.crossplane]
 }

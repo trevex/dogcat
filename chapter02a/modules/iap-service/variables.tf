@@ -11,7 +11,13 @@ variable "namespace" {
 }
 
 variable "selector" {
-  type = map(string)
+  type    = map(string)
+  default = {}
+}
+
+variable "selector_json" {
+  type    = string
+  default = "{}"
 }
 
 variable "port" {

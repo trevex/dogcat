@@ -18,6 +18,14 @@ variable "shared_cluster_id" {
   type = string
 }
 
+variable "iap_support_email" {
+  type = string
+}
+
+variable "iap_access_domain" {
+  type = string
+}
+
 variable "argo_cd_applications_repo_url" {
   type = string
 }
@@ -34,7 +42,7 @@ variable "crossplane_version" {
   type = string
 }
 
-variable "crossplane_provider_gcp_version" {
+variable "crossplane_provider_terraform_version" {
   type = string
 }
 

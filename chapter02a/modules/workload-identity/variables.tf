@@ -17,3 +17,8 @@ variable "roles" {
   type    = set(string)
   default = []
 }
+
+variable "roles_json" {
+  type    = string
+  default = "[]"
+}
