@@ -112,7 +112,7 @@ resource "google_artifact_registry_repository_iam_member" "cluster_ar_reader" {
 }
 
 ###############################################################################
-# Setup Tekton, ArgoCD, External-DNS, Cert-Manager
+# Setup Crossplane and our Compositions
 ###############################################################################
 
 data "google_client_config" "cluster" {}
@@ -169,36 +169,6 @@ module "crossplane_composites" {
   depends_on = [module.crossplane]
 }
 
-# # External DNS
-
-# module "external_dns" {
-#   source = "../../modules//external-dns"
-
-#   project       = var.project
-#   chart_version = var.external_dns_version
-#   dns_zones     = [module.dns_zone.fqdn]
-# }
-
-# # Cert-Manager
-
-# module "cert_manager" {
-#   source = "../../modules//cert-manager"
-
-#   project           = var.project
-#   chart_version     = var.cert_manager_version
-#   dns_zones         = [module.dns_zone.fqdn]
-#   letsencrypt_email = var.letsencrypt_email
-# }
-
-# # Chartmuseum
-
-# module "chartmuseum" {
-#   source = "../../modules//chartmuseum"
-
-#   project       = var.project
-#   chart_version = var.chartmuseum_version
-# }
-
 # # ArgoCD
 
 # module "argo_cd" {
@@ -221,111 +191,5 @@ module "crossplane_composites" {
 
 #   role   = "roles/artifactregistry.reader"
 #   member = "serviceAccount:${module.argo_cd.image_updater_service_account_email}"
-# }
-
-# # # We use the apps of apps pattern, so we need to register our applications repository:
-
-# resource "kubernetes_secret" "argo_cd_applications" {
-#   metadata {
-#     name      = "argo-cd-applications"
-#     namespace = "argo-cd"
-#     labels = {
-#       "argocd.argoproj.io/secret-type" = "repository"
-#     }
-#   }
-#   data = {
-#     type = "git"
-#     url  = var.argo_cd_applications_repo_url
-#   }
-
-#   depends_on = [module.argo_cd]
-# }
-
-# module "argo_cd_platform" {
-#   # We intentionally do not use `kubernetes_manifest` to as it will not
-#   # successfully plan until ArgoCD is installed.
-#   source = "../../modules//helm-manifests"
-
-#   name      = "argo-cd-${module.cluster.name}"
-#   manifests = <<EOF
-# apiVersion: argoproj.io/v1alpha1
-# kind: AppProject
-# metadata:
-#   name: ${module.cluster.name}
-#   namespace: argo-cd
-# spec:
-#   description: Project for shared cluster system components
-#   sourceRepos:
-#     - ${var.argo_cd_applications_repo_url}
-#   destinations:
-#     - namespace: "*"
-#       server: "https://kubernetes.default.svc"
-#   clusterResourceWhitelist:
-#     - group: "*"
-#       kind: "*"
-# EOF
-
-#   depends_on = [module.argo_cd]
-# }
-
-
-# # Tekton
-
-# module "tekton" {
-#   source = "../../modules//tekton"
-
-#   project           = var.project
-#   pipeline_version  = var.tekton_pipeline_version
-#   triggers_version  = var.tekton_triggers_version
-#   chains_version    = var.tekton_chains_version
-#   dashboard_version = var.tekton_dashboard_version
-#   dashboard_domain  = var.tekton_dashboard_domain
-#   iap_brand         = google_iap_brand.dogcat.name
-
-#   depends_on = [module.cert_manager, module.argo_cd]
-# }
-
-
-# # We also use ArgoCD to deploy Tekton Pipelines for our applications:
-
-# module "tekton_application_pipelines" {
-#   # We intentionally do not use `kubernetes_manifest` to as it will not
-#   # successfully plan until ArgoCD is installed.
-#   source = "../../modules//helm-manifests"
-
-#   name      = "tekton-application-pipelines"
-#   manifests = <<EOF
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: tekton-application-pipelines
-#   namespace: argo-cd
-# spec:
-#   destination:
-#     namespace: tekton
-#     server: "https://kubernetes.default.svc"
-#   project: ${module.cluster.name}
-#   source:
-#     path: "tekton"
-#     repoURL: ${var.argo_cd_applications_repo_url}
-#     targetRevision: HEAD
-#   syncPolicy:
-#     automated: {}
-#  EOF
-
-#   depends_on = [module.tekton, module.argo_cd_platform]
-# }
-
-# # Let's configure a tekton trigger, that can schedule PipelineRuns
-
-# module "tekton_trigger" {
-#   source = "../../modules//tekton-trigger"
-
-#   trigger_domain  = "trigger.${var.tekton_dashboard_domain}"
-#   image_base      = "${google_artifact_registry_repository.images.location}-docker.pkg.dev/${var.project}/${google_artifact_registry_repository.images.repository_id}"
-#   git_base_url    = var.tekton_trigger_git_base_url
-#   chartmuseum_url = module.chartmuseum.internal_url
-
-#   depends_on = [module.tekton]
 # }
 

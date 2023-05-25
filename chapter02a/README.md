@@ -93,14 +93,21 @@ The comments in the files may assist you.
 
 
 ## TODO Roll out first cluster
-cluster + crossplane
+cluster + crossplane (TWO STEPS!)
 
 ## Bootstrap ArgoCD
 login to cluster
 update config
 -> app of apps repo
 -> cert-manager project ids
+-> replace domains
+-> replace tekton trigger params
 kubectl apply -k dogcat-applications/config/argocd
+-> get tekton trigger secret
+-> setup github webhook (ch02b)
+
+## Dev cluster
+-> two step rollout again
 
 
 
