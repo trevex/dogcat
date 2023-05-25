@@ -6,5 +6,5 @@ nameSuffix: -dev
 resources:
 - ../../base
 
-patches:
+patchesStrategicMerge:
 - deployment.yaml
