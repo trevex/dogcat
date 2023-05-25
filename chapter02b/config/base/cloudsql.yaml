@@ -1,0 +1,10 @@
+apiVersion: gcp.nvoss.demo.altostrat.com/v1alpha1
+kind: CloudSQL
+metadata:
+  name: dogcat
+spec:
+  version: "POSTGRES_14"
+  backups: false
+  deletionProtection: false
+  writeConnectionSecretToRef:
+    name: dogcat
