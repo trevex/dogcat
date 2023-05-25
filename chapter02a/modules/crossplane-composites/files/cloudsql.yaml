@@ -23,7 +23,7 @@ spec:
               %{ endfor }
             vars:
               - key: name
-              - key: version
+              - key: database_version
                 value: 'POSTGRES_14'
               - key: region
                 value: ${region}
@@ -46,7 +46,7 @@ spec:
           toFieldPath: spec.forProvider.vars[0].value
           policy:
             fromFieldPath: Required
-        - fromFieldPath: spec.version
+        - fromFieldPath: spec.databaseVersion
           toFieldPath: spec.forProvider.vars[1].value
         - fromFieldPath: spec.tier
           toFieldPath: spec.forProvider.vars[3].value
@@ -102,7 +102,7 @@ spec:
             properties:
               tier:
                 type: string
-              version:
+              databaseVersion:
                 type: string
               availabilityType:
                 type: string
@@ -117,6 +117,6 @@ spec:
               backups:
                 type: boolean
             required:
-            - version
+            - databaseVersion
             - backups
             - deletionProtection

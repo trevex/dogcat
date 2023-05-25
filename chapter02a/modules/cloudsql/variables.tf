@@ -3,7 +3,7 @@ variable "name" {
   nullable = false
 }
 
-variable "version" {
+variable "database_version" {
   type    = string
   default = "POSTGRES_14"
 }
