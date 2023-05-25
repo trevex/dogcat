@@ -5,3 +5,6 @@ nameSuffix: -dev
 
 resources:
 - ../../base
+
+patches:
+- deployment.yaml

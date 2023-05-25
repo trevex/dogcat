@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dogcat
+spec:
+  template:
+    spec:
+      serviceAccountName: dogcat-dev
+      containers:
+        - name: dogcat
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: dogcat-dev-db
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: dogcat-dev-db
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: dogcat-dev-db
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dogcat-dev-db

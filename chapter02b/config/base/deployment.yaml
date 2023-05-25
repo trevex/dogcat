@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dogcat
+  labels:
+    app.kubernetes.io/name: dogcat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dogcat
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dogcat
+    spec:
+      serviceAccountName: dogcat
+      containers:
+        - name: dogcat
+          image: dogcat:latest
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: dogcat-db
+                  key: host
+                  optional: false
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: dogcat-db
+                  key: user
+                  optional: false
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: dogcat-db
+                  key: database_name
+                  optional: false
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dogcat-db
+                  key: password
+                  optional: false
+          args:
+            - server
+            - --driver
+            - postgres
+            - --conn-str
+            - host=$(DB_HOST) user=$(DB_USER) dbname=$(DB_NAME) password=$(DB_PASSWORD) sslmode=disable
+          ports:
+            - name: http
+              containerPort: 4000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
