@@ -41,11 +41,27 @@ spec:
                 value: ''
               - key: backups
                 value: 'true'
+          writeConnectionSecretToRef:
+            namespace: ""
+            name: ""
       patches:
         - fromFieldPath: metadata.labels["crossplane.io/claim-name"]
           toFieldPath: spec.forProvider.vars[0].value
           policy:
             fromFieldPath: Required
+        - fromFieldPath: metadata.labels["crossplane.io/claim-namespace"]
+          toFieldPath: spec.writeConnectionSecretToRef.namespace
+          policy:
+            fromFieldPath: Required
+        - fromFieldPath: metadata.labels["crossplane.io/claim-name"]
+          toFieldPath: spec.writeConnectionSecretToRef.name
+          policy:
+            fromFieldPath: Required
+          transforms:
+            - type: string
+              string:
+                type: Format
+                fmt: "%s-db"
         - fromFieldPath: spec.databaseVersion
           toFieldPath: spec.forProvider.vars[1].value
         - fromFieldPath: spec.tier
