@@ -3,7 +3,7 @@ kind: CloudSQL
 metadata:
   name: dogcat
 spec:
-  version: "POSTGRES_14"
+  databaseVersion: "POSTGRES_14"
   backups: false
   deletionProtection: false
   writeConnectionSecretToRef:
