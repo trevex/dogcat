@@ -1,0 +1,122 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xcloudsql.gcp.nvoss.demo.altostrat.com
+  labels:
+    provider: gcp
+    implementation: terraform
+spec:
+  compositeTypeRef:
+    apiVersion: gcp.nvoss.demo.altostrat.com/v1alpha1
+    kind: XCloudSQL
+  resources:
+    - name: tf-cloudsql
+      base:
+        apiVersion: tf.upbound.io/v1beta1
+        kind: Workspace
+        spec:
+          forProvider:
+            source: Inline
+            module: |
+              %{ for content in src_files }
+              ${indent(14, content)}
+              %{ endfor }
+            vars:
+              - key: name
+              - key: version
+                value: 'POSTGRES_14'
+              - key: region
+                value: ${region}
+              - key: tier
+                value: 'db-f1-micro'
+              - key: availability_type
+                value: 'ZONAL'
+              - key: disk_size
+                value: '10'
+              - key: deletion_protection
+                value: 'true'
+              - key: database_name
+                value: ''
+              - key: user
+                value: ''
+              - key: backups
+                value: 'true'
+      patches:
+        - fromFieldPath: metadata.labels["crossplane.io/claim-name"]
+          toFieldPath: spec.forProvider.vars[0].value
+          policy:
+            fromFieldPath: Required
+        - fromFieldPath: spec.version
+          toFieldPath: spec.forProvider.vars[1].value
+        - fromFieldPath: spec.tier
+          toFieldPath: spec.forProvider.vars[3].value
+        - fromFieldPath: spec.availabilityType
+          toFieldPath: spec.forProvider.vars[4].value
+        - fromFieldPath: spec.diskSize
+          transforms:
+            - type: convert
+              convert:
+               toType: string
+          toFieldPath: spec.forProvider.vars[5].value
+        - fromFieldPath: spec.deletionProtection
+          toFieldPath: spec.forProvider.vars[6].value
+          transforms:
+            - type: convert
+              convert:
+               toType: string
+        - fromFieldPath: spec.databaseName
+          toFieldPath: spec.forProvider.vars[7].value
+        - fromFieldPath: spec.user
+          toFieldPath: spec.forProvider.vars[8].value
+        - fromFieldPath: spec.backups
+          toFieldPath: spec.forProvider.vars[9].value
+          transforms:
+            - type: convert
+              convert:
+               toType: string
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xcloudsqls.gcp.nvoss.demo.altostrat.com
+spec:
+  group: gcp.nvoss.demo.altostrat.com
+  names:
+    kind: XCloudSQL
+    plural: xcloudsqls
+  claimNames:
+    kind: CloudSQL
+    plural: cloudsqls
+  defaultCompositionRef:
+    name: xcloudsql.gcp.nvoss.demo.altostrat.com
+  versions:
+  - name: v1alpha1
+    served: true
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              tier:
+                type: string
+              version:
+                type: string
+              availabilityType:
+                type: string
+              diskSize:
+                type: integer
+              deletionProtection:
+                type: boolean
+              databaseName:
+                type: string
+              user:
+                type: string
+              backups:
+                type: boolean
+            required:
+            - version
+            - backups
+            - deletionProtection

@@ -28,6 +28,16 @@ ${templatefile("${path.module}/files/iapservice.yaml", {
     file("${path.module}/../iap-service/main.tf"),
     file("${path.module}/../iap-service/outputs.tf"),
   ]
+  })}
+---
+${templatefile("${path.module}/files/cloudsql.yaml", {
+  region = var.region
+  # See note above
+  src_files = [
+    file("${path.module}/../cloudsql/variables.tf"),
+    file("${path.module}/../cloudsql/main.tf"),
+    file("${path.module}/../cloudsql/outputs.tf"),
+  ]
 })}
 ---
 EOF
