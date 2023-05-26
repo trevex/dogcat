@@ -1,0 +1,32 @@
+apiVersion: gcp.nvoss.demo.altostrat.com/v1alpha1
+kind: IAPService
+metadata:
+  name: dogcat-iap
+spec:
+  port: 8080
+  targetPort: 4000
+  selector:
+    app.kubernetes.io/name: dogcat
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dogcat-iap
+  annotations:
+    "cert-manager.io/cluster-issuer": "letsencrypt"
+spec:
+  rules:
+  - host: "dogcat.dev.dogcat.nvoss.demo.altostrat.com"
+    http:
+      paths:
+      - path: /*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: dogcat-iap-dev # will be suffixed by kustomization.yaml
+            port:
+              number: 8080
+  tls:
+  - hosts:
+      - "dogcat.dev.dogcat.nvoss.demo.altostrat.com"
+    secretName: dogcat-dev-tls

@@ -7,3 +7,4 @@ resources:
 - cloudsql.yaml
 - workloadidentity.yaml
 - deployment.yaml
+- service.yaml
