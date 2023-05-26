@@ -1,9 +1,0 @@
-apiVersion: gcp.nvoss.demo.altostrat.com/v1alpha1
-kind: WorkloadIdentity
-metadata:
-  namespace: default
-  name: testwi
-spec:
-  roles: ["roles/cloudsql.client"]
-  writeConnectionSecretToRef:
-    name: testwi-secret

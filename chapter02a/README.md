@@ -95,6 +95,14 @@ The comments in the files may assist you.
 ## TODO Roll out first cluster
 cluster + crossplane (TWO STEPS!)
 
+
+### NOTE REPLACE
+letsencrypt_email    = "nvoss@google.com"
+argo_cd_domain                = "argocd.shared.dogcat.nvoss.demo.altostrat.com"
+argo_cd_applications_repo_url = "git@github.com:NucleusEngineering/dogcat-applications.git"
+tekton_dashboard_domain     = "tekton.shared.dogcat.nvoss.demo.altostrat.com"
+tekton_trigger_git_base_url = "git@github.com:NucleusEngineering"
+
 ## Bootstrap ArgoCD
 login to cluster
 update config
@@ -105,6 +113,15 @@ update config
 kubectl apply -k dogcat-applications/config/argocd
 -> get tekton trigger secret
 -> setup github webhook (ch02b)
+-> we want to allow argocd image updater to write updates to 
+ssh-keygen -t ed25519 -C "nvoss@google.com" -f argocd-image-updater -q -N ""
+kubectl -n argocd create secret generic git-applications-write --from-file=sshPrivateKey=./argocd-image-updater
+-> use local git creds instead...
+cat argocd-image-updater.pub # copy
+Github UI (see screenshots)
+Kyverno too large error CRD dedicated sync replace
+
+
 
 ## Dev cluster
 -> two step rollout again

@@ -1,4 +1,4 @@
-# The project you created: "${PROJECT_BASENAME}-shared":
+# The project you created: "${PROJECT_BASENAME}-dev":
 project = "nvoss-dogcat-ch02-dev"
 # The region you are working in "${REGION}":
 region = "europe-west3"
@@ -22,28 +22,11 @@ shared_cluster_id      = "projects/nvoss-dogcat-ch02-shared/locations/europe-wes
 iap_access_domain = "nvoss.altostrat.com"
 iap_support_email = "admin@nvoss.altostrat.com"
 
+# Crossplane is setup by terraform and compositions using terraform are set up
 crossplane_version                    = "v1.12.1" # chart-version
 crossplane_provider_terraform_version = "v0.7.0"
-
-
-
-
-
-
-
 
 # For this cluster an instantiation of apps-of-apps is used, so let's specify
 # our fork of the applications repository.
 argo_cd_applications_repo_url = "git@github.com:NucleusEngineering/dogcat-applications.git"
 argo_cd_sync_policy_automated = true
-
-# Cert-manager will use let's encrypt and to self-register we need an email as well
-letsencrypt_email    = "nvoss@google.com"
-cert_manager_version = "v1.11.0" # chart-version
-
-# Versions of the components installed to the cluster
-external_dns_version = "v6.14.0" # chart-version
-kyverno_version      = "v2.7.0"  # chart-version
-
-# Will set up per team resources, such as namespaces, policies and Crossplane-providers
-teams = ["dogcat"]
