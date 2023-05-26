@@ -1,4 +1,0 @@
-region: europe-west1
-
-cloudsql:
-  deletionPolicy: abandon
