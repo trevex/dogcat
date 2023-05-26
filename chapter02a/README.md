@@ -109,6 +109,12 @@ kubectl apply -k dogcat-applications/config/argocd
 ## Dev cluster
 -> two step rollout again
 
+## Ch02b
+-> add repo
+-> setup webhook
+-> add team
+-> add app
+
 
 
 ## Roll out the first cluster
