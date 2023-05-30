@@ -53,6 +53,15 @@ metadata:
   name: crossplane-provider-terraform-config
 spec:
   serviceAccountName: ${module.provider_terraform_wi.k8s_service_account_name}
+  resources:
+    limits:
+      cpu: 250m
+      ephemeral-storage: 1Gi
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      ephemeral-storage: 1Gi
+      memory: 512Mi
 ---
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
