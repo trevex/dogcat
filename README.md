@@ -22,11 +22,17 @@ your needs and was tailored to the (fictional) needs of the (fictional) teams.
 You can find some background about the development team in `chapter01` and `chapter02b`
 gives an outline of the platform team.
 
-## OSS-Components
+## Technology
 
+A rough overview of the technology involed can be seen in the following diagram which does not cover all cloud services (check section below for more details):
 ![Dogcat platform architecture: overview of components](docs/dogcat-component-view.png)
 
-As seen in the diagram above, the platform leverages several OSS components and tools.
+### Open source software
+
+As seen in the diagram above, the platform leverages several OSS projects, most 
+of which are under the Cloud Native Computing Foundation (CNCF, sub-organization 
+of the Linux Foundation) umbrella.
+
 To quickly get an idea about the purpose and scope of this demo, see the below list 
 with comments regarding their usage:
 * [terraform](https://github.com/hashicorp/terraform): Used by the platform team to provision the cloud resources for the IDP and indirectly used by Crossplane Compositions to expose functionality to development teams.
@@ -37,7 +43,7 @@ with comments regarding their usage:
 * [external-dns](https://github.com/kubernetes-sigs/external-dns): Automatically create DNS records for Ingress resources.
 * [Kyverno](https://github.com/kyverno/kyverno): Policies and constraints for GKE clusters, e.g. only allow signed images, enforce labels, ...
 
-## Cloud Services
+### Cloud Services
 
 While `chapter01` mainly leverages:
 * [Cloud Run](https://cloud.google.com/run) as serverless platform.
