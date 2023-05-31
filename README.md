@@ -4,6 +4,9 @@ Dogcat is a complex demo trying to illustrate an application delivery process
 involving both the development team, but also a platform team providing an
 internal developer platform (IDP).
 
+This demo covers a lot of ground some familiarity with the technology used by the
+demo is preferable. Check out the section below!
+
 ## Overview
 
 In `chapter01` the development team leverages serverless technology to quickly

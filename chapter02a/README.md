@@ -3,6 +3,11 @@
 In this chapter we change perspective and set up the internal developer platform
 and processes as provided by the Platform-Team.
 
+## Team-Background
+
+__TODO___
+
+
 
 ## Prerequisites
 
@@ -12,31 +17,46 @@ gcloud (includes gsutil)
 terraform
 kubectl
 base64
+ripgrep
+xargs
+sed
 ```
-__NOTE__: The above tools are assumed to be GNU-variants if applicable.
+__NOTE__: The above tools are assumed to be GNU-variants if applicable. If you only have the BSD-variants available, you might have to update some commands in this code or install them.
 
 This guide does not go into detail how to set up a public domain.
-A public domain has to be set up with its zone configured in another Google Cloud project.
-The sub-zone will be created for each cluster/project.
+A public domain has to be set up with its zone configured in another Google Cloud project. 
+This zone does not have to be a TLD. For the purpose of this demo the zone `dogcat.nvoss.demo.altostrat.com` was preconfigured.
+For each cluster/project a sub-zone will be created.
 
 The internal platform services, such as ArgoCD and Tekton, will be hosted under sub-domains of this public domain,
 but will be protected by an Identity-Aware Proxy (IAP), which will restrict access to the domain outside of your organization.
 
-## Fork `dogcat-applications`
+## Org-Policies (optional)
 
-__TODO__
+GKE Autopilot clusters require serial port logging to be effectively debugged, check the [documentation for details](https://cloud.google.com/kubernetes-engine/docs/troubleshooting/troubleshooting-autopilot-clusters#scale-up-failed-serial-port-logging).
+If your organization uses organizational policies, you might have to make sure it is not enforced in those projects:
+```bash
+for ENV in shared dev; do
+  gcloud services enable --project ${PROJECT_BASENAME}-${ENV} orgpolicy.googleapis.com
+  gcloud beta resource-manager org-policies disable-enforce compute.disableSerialPortLogging --project=${PROJECT_BASENAME}-${ENV}
+  gcloud compute project-info add-metadata --project=${PROJECT_BASENAME}-${ENV} --metadata serial-port-logging-enable=true
+done
+```
 
+## Fork `dogcat` and `dogcat-applications`
+
+For the purpose of this demo, please go ahead and fork both the [dogcat](https://github.com/NucleusEngineering/dogcat)- and [dogcat-applications](https://github.com/NucleusEngineering/dogcat-applications)-repositories.
+
+While the the [dogcat](https://github.com/NucleusEngineering/dogcat)-repository is the primary repository
+containing the application code and terraform code as well as the documentation, the [dogcat-applications](https://github.com/NucleusEngineering/dogcat-applications)-repository is the entrance point for the GitOps processes implemented by ArgoCD.
 
 ## Projects
 
-Before we start we need four projects:
+Before we start we need two projects:
 1. One project that is referred to as `shared`-project containing CI/CD and other central services.
 2. A project for the development environment (`dev`)
-3. Finally a project for the production environment (`prd`). 
 
-__NOTE__: We do not create a staging environment as little value is added for the purpose of this demo, but this is most likely something desirable in a real world scenario.
-
-__TODO__: insert diagram
+__NOTE__: We do not create a staging- or production-environment as little value is added for the purpose of this demo and keeps cost down, but this is most likely something desirable in a real world scenario.
 
 You can create the projects using the CLI. Adapt your `PROJECT_BASENAME` and `REGION` as required:
 ```bash
@@ -45,7 +65,6 @@ export PROJECT_BASENAME="nvoss-dogcat-ch02"
 export REGION="europe-west3"
 gcloud projects create ${PROJECT_BASENAME}-shared --labels=environment=shared
 gcloud projects create ${PROJECT_BASENAME}-dev --labels=environment=dev
-gcloud projects create ${PROJECT_BASENAME}-prd --labels=environment=prd
 
 # Produces output as follows (will take a minute):
 Create in progress for [https://cloudresourcemanager.googleapis.com/v1/projects/nvoss-dogcat-ch02-shared].
@@ -77,53 +96,114 @@ gcloud auth application-default login --project ${PROJECT_BASENAME}-shared
 
 ## Update `terraform` code
 
+Now before you roll out the terraform code to provision the basic infrastructure,
+you'll have to do some updates.
+
 Some values can not be variables in `terraform` such as values used in backend
 configurations, so we have to update them by other means.
 
-You can either open all `environments/*/main.tf`-files and update the name of the bucket
+You can either open all `environments/{shared,main}/main.tf`-files and update the name of the bucket
 to match the bucket created earlier or use a command such as (requires `ripgrep`, GNU-`xargs`, GNU-`sed`):
 ```bash
 rg -l 'backend "gcs"' | xargs -I{} sed -i "s/nvoss-dogcat-ch02-tf-state/${PROJECT_BASENAME}-tf-state/g" {}
 ```
 
 Next you will have to update the terraform variables, that are set.
-Open each `environments/*/*.auto.tfvars`-file and update the variables
-to match your projects, region and DNS-settings.
-The comments in the files may assist you.
+Start with `environments/shared/shared.auto.tfvars` and update the variables.
+The comments in the file may assist you.
+We will tackle `environments/dev/dev.auto.tfvars` once the shared environment is setup.
 
+## Roll out the shared cluster
 
-## TODO Roll out first cluster
-cluster + crossplane (TWO STEPS!)
+Now let's start with the `shared`-cluster, which is were most of the tools
+of the internal developer platform are hosted.
+First we do a targeted rollout to provision our GKE cluster:
+```bash
+terraform -chdir=environments/shared init
+terraform -chdir=environments/shared apply -target="module.cluster"
+terraform -chdir=environments/shared apply
+```
 
+We use two steps as some terraform resources depend on the cluster being available.
 
-### NOTE REPLACE
-letsencrypt_email    = "nvoss@google.com"
-argo_cd_domain                = "argocd.shared.dogcat.nvoss.demo.altostrat.com"
-argo_cd_applications_repo_url = "git@github.com:NucleusEngineering/dogcat-applications.git"
-tekton_dashboard_domain     = "tekton.shared.dogcat.nvoss.demo.altostrat.com"
-tekton_trigger_git_base_url = "git@github.com:NucleusEngineering"
+__NOTE__: If you want to get a better of what is happening in the code, it is recommended to read the code as it was heavily commented for this purpose. Some short-cuts were taken for the purpose of this demo. A production-ready set up would most likely utilize `terragrunt` or `terramate`.
 
 ## Bootstrap ArgoCD
-login to cluster
-update config
--> app of apps repo
--> cert-manager project ids
--> replace domains
--> replace tekton trigger params
-kubectl apply -k dogcat-applications/config/argocd
--> get tekton trigger secret
--> setup github webhook (ch02b)
--> we want to allow argocd image updater to write updates to 
-ssh-keygen -t ed25519 -C "nvoss@google.com" -f argocd-image-updater -q -N ""
-kubectl -n argocd create secret generic git-applications-write --from-file=sshPrivateKey=./argocd-image-updater
--> use local git creds instead...
-cat argocd-image-updater.pub # copy
-Github UI (see screenshots)
-Kyverno too large error CRD dedicated sync replace
 
+Now the terraform code is fairly minimal and only is responsible for cloud infrastructure and
+managing Crossplane and the platform team's compositions.
+To deploy the rest of the services to the Kubernetes cluster, ArgoCD is used.
 
+After bootstrapping ArgoCD is managing itself from the `dogcat-applications`-repository
+and deploy all other services following ArgoCD declarative "App of Apps"-paradigm.
+
+### Update configuration
+
+Let's go to the `dogcat-applications`-repository and update the configuration.
+Several replacements are required to update the configuration with your designated values.
+
+Before executing any commands make sure the `REGION` and `PROJECT_BASENAME` environment variables are available.
+
+1. We update the project names and region where required:
+```bash
+rg -l 'europe-west3' | xargs -I{} sed -i "s/europe-west3/${REGION}/g" {}
+rg -l 'nvoss-dogcat-ch02' | xargs -I{} sed -i "s/nvoss-dogcat-ch02/${PROJECT_BASENAME}/g" {}
+```
+
+2. Cert-manager uses Let's Encrypt to issue certificates automatically, an email is required to create the issuer. Make sure to replace or provide `${YOUR_EMAIL}` in the following command:
+```bash
+rg -l 'nvoss@google.com' | xargs -I{} sed -i "s/nvoss@google\.com/${YOUR_EMAIL}/g" {}
+```
+
+3. Tekton and ArgoCD are exposed under a public domain in the related sub-zone, so make sure to update them. Make sure to replace or provider `${YOUR_ZONE}` in the following command:
+```bash
+rg -l 'dogcat.nvoss.demo.altostrat.com' | xargs -I{} sed -i "s/dogcat\.nvoss\.demo\.altostrat\.com/${YOUR_ZONE}/g" {}
+```
+
+4. Lastly, we need to update the references to the repositories to your forks, so update the organization-/user-part of the repository references. Make sure to replace or provide `${YOUR_GITBASE}` in the following commands:
+```bash
+rg -l 'git@github.com:NucleusEngineering' | xargs -I{} sed -i "s/git@github\.com:NucleusEngineering/${YOUR_GITBASE}/g" {}
+```
+
+### Deploy ArgoCD
+
+Select the correct context or create and select it by using the following command:
+```bash
+export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+gcloud container clusters get-credentials cluster-shared --region ${REGION} --project ${PROJECT_BASENAME}-shared
+```
+
+Test the connection by issuing `kubectl get pods --all-namspaces` and then deploy ArgoCD using kustomize:
+```bash
+kubectl apply -k config/argocd
+```
+
+## Wait for a bit
+
+What happens now might take a moment: ArgoCD is installing components, GKE is 
+provisioning new nodes to cover the workload. As cert-manager and external-dns are not immediately available, 
+you can port-forward the ArgoCD UI to track what is going:
+```bash
+kubectl -n argocd port-forward argocd-server-12345678-abcde 8080 # use the correct pod-name
+```
+
+Or check the events happening in your cluster:
+```bash
+kubectl get events --all-namespaces -w
+```
+
+__TODO__: Add some screenshots of ArgoCD in action
+
+## Github Webhook for Tekton
+
+__TODO__: screenshot of tekton UI
+__TODO__: see sections
+
+### get tekton trigger secret
+### setup github webhook
 
 ## Dev cluster
+-> update config
 -> two step rollout again
 
 ## Ch02b
@@ -134,82 +214,11 @@ Kyverno too large error CRD dedicated sync replace
 
 
 
-## Roll out the first cluster
-
-Now let's start with the `shared`-cluster, which is were most of the tools
-of the internal developer platform are hosted.
-First we do a targeted rollout to provision our GKE cluster:
-```bash
-terraform -chdir=environments/shared init
-terraform -chdir=environments/shared apply -target="module.cluster"
-```
-
-__NOTE__: If you want to get a better of what is happening in the code, it is recommended to read the code as it was heavily commented for this purpose. Some short-cuts were taken for the purpose of this demo. A production-ready set up would most likely utilize `terragrunt` or `terramate`.
 
 
-## Org-Policies (optional)
-
-GKE Autopilot clusters require serial port logging to be effectively debugged, check the [documentation for details](https://cloud.google.com/kubernetes-engine/docs/troubleshooting/troubleshooting-autopilot-clusters#scale-up-failed-serial-port-logging).
-If your organization uses organizational policies, you might have to make sure it is not enforced in those projects:
-```bash
-for ENV in shared dev stg prd; do
-  gcloud services enable --project ${PROJECT_BASENAME}-${ENV} orgpolicy.googleapis.com
-  gcloud beta resource-manager org-policies disable-enforce compute.disableSerialPortLogging --project=${PROJECT_BASENAME}-${ENV}
-  gcloud compute project-info add-metadata --project=${PROJECT_BASENAME}-${ENV} --metadata serial-port-logging-enable=true
-done
-```
 
 
-## Connecting to the cluster
-To connect to the cluster (with the new authentication plugin) run:
-```bash
-export USE_GKE_GCLOUD_AUTH_PLUGIN=True
-gcloud container clusters get-credentials cluster-shared --region ${REGION} --project ${PROJECT_BASENAME}-shared
-```
 
-
-## Rollout platform services 
-
-In the cluster there is currently not much running, but this is about to change.
-Apply the `terraform` code once more without a target to deploy everything you need to continue with ArgoCD and Tekton:
-```bash
-terraform -chdir=environments/shared apply
-```
-
-## Accessing ArgoCD UI and Tekton Dashboard
-
-The platform services are rolled out, but it might still take a while until
-the changes are properly reconciled in your Kubernetes-cluster.
-`cert-manager` will create the TLS-certificate for the Load-Balancers and 
-`external-dns` will set up the DNS records for the services.
-
-You can watch the events happening in your cluster with:
-```bash
-kubectl get events --all-namespaces -w
-```
-
-If you are impatient you can also port-forward the services, but once the dust settles 
-the services will be available under the in terraform configured domains protected by IAP.
-
-When you access ArgoCD it will ask you to login.
-You can use the inbuilt initial admin user, which for the purpose of this demo, we will keep using.
-
-You can retrieve the password for the user `admin` as follows:
-```bash
-kubectl get secrets -n argo-cd argocd-initial-admin-secret --template={{.data.password}} | base64 --decode
-```
-
-In the ArgoCD UI you should already see an application that deploys shared tekton tasks to the cluster.
-
-__TODO__: Add some screenshots
-
-The tekton dashboard is a read-only view and does not require authentication other than required by the IAP.
-
-__TODO__: Add some screenshots
-
-There are already some tekton resources that were created by terraform and ArgoCD.
-Terraform configured an event listener that we will use with our Github repository and
-ArgoCD already went ahead and deployed some shared tekton tasks from our `dogcat-applications` repository.
 
 
 ## Let's roll out our application clusters
@@ -275,4 +284,11 @@ __TODO__: Policies
 - Using Argo CD and Tekton with private repositories
 - Terraform CI/CD is omitted to keep the demo simple, but https://cloud.google.com/docs/terraform/resource-management/managing-infrastructure-as-code can be used as starting point, consider also using dagger and leverage tflint, tfsec and checkov.
 - ConfigConnector or ConfigController can be simpler way to get starting managing Google Cloud resources from within Kubernetes
+
+-> we want to allow argocd image updater to write updates to 
+ssh-keygen -t ed25519 -C "nvoss@google.com" -f argocd-image-updater -q -N ""
+kubectl -n argocd create secret generic git-applications-write --from-file=sshPrivateKey=./argocd-image-updater
+-> use local git creds instead...
+cat argocd-image-updater.pub # copy
+Github UI (see screenshots)
 

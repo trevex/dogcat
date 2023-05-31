@@ -5,14 +5,17 @@ region = "europe-west3"
 
 # The cluster will also manage a DNS-zone, so a pre-existing DNS-zone managed
 # by Google Cloud is required (as described in the prerequisites).
-# The project-name, zone-name and desired fqdn for dedidcated zone are required:
+# The project-name, zone-name of the "parent"-zone are required and the desired
+# FQDN for dedidcated zone are required:
 dns_project        = "nvoss-demo-dns"
 dns_zone_name      = "nvoss-demo"
 dns_dedicated_fqdn = "shared.dogcat.nvoss.demo.altostrat.com."
 
 # We protect our platform-services with IAP, so specify a fitting
 # trusted domain and support email for the OAuth-Client.
-iap_access_domain = "nvoss.altostrat.com"
+# All users belonging to the trusted domain will have access to the IAP protected
+# services.
+iap_access_domain = "nvoss.altostrat.com" # e.g. myuser@nvoss.altostrat.com will have access
 iap_support_email = "admin@nvoss.altostrat.com"
 
 # Crossplane is setup by terraform and compositions using terraform are set up
