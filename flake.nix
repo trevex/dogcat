@@ -54,8 +54,6 @@
             terraform
             tfsec
             tflint
-            kubernetes-helm
-            skaffold
           ];
         };
       }
