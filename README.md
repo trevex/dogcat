@@ -1,5 +1,8 @@
 # `dogcat`
 
+> [!NOTE]  
+> I recently talked about Platform Engineering at a conference, you can find the slides [here](docs/a-story-about-platform-engineering.pdf).
+
 Dogcat is a complex demo trying to illustrate an application delivery process 
 involving both the development team, but also a platform team providing an
 internal developer platform (IDP).
@@ -22,7 +25,7 @@ and illustrating how the team is adopting the established workflows.
 
 _**NOTE**_: Keep in mind that the platform created by this demo might not fit
 your needs and was tailored to the (fictional) needs of the (fictional) teams.
-You can find some background about the development team in `chapter01` and `chapter02b`
+You can find some background about the development team in `chapter01` and `chapter02a`
 gives an outline of the platform team.
 
 ## Technology
