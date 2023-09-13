@@ -1,7 +1,7 @@
 # `dogcat`
 
 > [!NOTE]  
-> I recently talked about Platform Engineering at a conference, you can find the slides [here](./docs/a-story-about-platform-engineering.pdf).
+> I recently talked about Platform Engineering at a conference, you can find the slides [here](https://github.com/trevex/dogcat/blob/main/docs/a-story-about-platform-engineering.pdf).
 
 Dogcat is a complex demo trying to illustrate an application delivery process 
 involving both the development team, but also a platform team providing an
